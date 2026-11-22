@@ -1,0 +1,3677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#4f46e5" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Physics Master 12 — TN Public Exam Numericals Game</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans Tamil', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans Tamil', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: contain;
+    }
+    .glass-card {
+      backdrop-filter: blur(12px);
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.93); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .animate-shake {
+      animation: shake 0.3s ease-in-out;
+    }
+    @keyframes chocoFall {
+      0% {
+        transform: translateY(-12vh) rotate(0deg) scale(0.75);
+        opacity: 0;
+      }
+      12% {
+        opacity: 1;
+      }
+      85% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(105vh) rotate(360deg) scale(1.05);
+        opacity: 0;
+      }
+    }
+    .choco-piece {
+      position: fixed;
+      top: -10vh;
+      z-index: 60;
+      pointer-events: none;
+      animation-name: chocoFall;
+      animation-timing-function: linear;
+      animation-fill-mode: forwards;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Clean Print / PDF Styling */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+      }
+      .no-print, header, #toast, #choco-layer {
+        display: none !important;
+      }
+      #printable-report {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      .print-break-inside {
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+  <!-- Chocolate Shower Overlay Layer -->
+  <div id="choco-layer" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
+
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 glass-card border-b border-slate-200 dark:border-slate-800 px-3 sm:px-4 py-2.5">
+    <div class="max-w-3xl mx-auto flex items-center justify-between gap-2">
+      <!-- Left: Home Icon + Personalized Teacher Title -->
+      <div class="flex items-center gap-2 min-w-0">
+        <button onclick="goHome()" id="btn-home-nav" title="Home" aria-label="Home"
+          class="shrink-0 w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-lg shadow-sm transition active:scale-95">
+          🏠
+        </button>
+
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h1 id="header-teacher-title" class="font-extrabold text-sm sm:text-base leading-tight truncate text-slate-900 dark:text-white">
+              SARADHA M, GGHSS ANTHIYUR — Physics Game Hub
+            </h1>
+            <button onclick="editTeacherName()" id="btn-edit-teacher" title="Edit Teacher Name"
+              class="shrink-0 text-[11px] px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-indigo-600 transition">
+              ✏️
+            </button>
+          </div>
+          <p id="header-subtitle" class="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+            Class 12 Physics • 74 Public Exam Numericals
+          </p>
+        </div>
+      </div>
+
+      <!-- Right: Chocolates Counter, Language Toggle, Mute & Theme -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <!-- Teacher Attendance Viewer Button -->
+        <button onclick="openAttendanceModal()" id="btn-attendance-top" title="View Students Attended"
+          class="flex items-center gap-1 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-300 px-2 py-1 rounded-full text-xs font-extrabold border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-200 transition">
+          <span>👥</span>
+          <span id="header-attended-count">0</span>
+        </button>
+
+        <!-- Chocolate Badge -->
+        <div class="flex items-center gap-1 bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 px-2 py-1 rounded-full text-xs font-extrabold border border-amber-200 dark:border-amber-800/60">
+          <span>🍫</span>
+          <span id="header-choco">0</span>
+        </div>
+
+        <!-- Language Switcher (தமிழ் / English) -->
+        <button onclick="toggleLanguage()" id="btn-lang-top"
+          class="px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition active:scale-95">
+          தமிழ்
+        </button>
+
+        <!-- Voice Mute/Unmute Toggle -->
+        <button onclick="toggleMuteSpeech()" id="btn-mute-top" title="Voice Mute / Unmute"
+          class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs transition">
+          🔊
+        </button>
+
+        <!-- Dark/Light Theme -->
+        <button onclick="toggleTheme()" aria-label="Toggle Theme"
+          class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs transition">
+          <span id="theme-icon">🌙</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 w-full max-w-3xl mx-auto px-4 py-5 pb-24">
+
+    <!-- ==================== VIEW 1: FRONT PAGE (STUDENT DETAILS + MODES) ==================== -->
+    <section id="view-home" class="space-y-5 animate-pop">
+
+      <!-- Welcome Hero & Language Banner -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 p-5 sm:p-6 text-white shadow-xl shadow-indigo-600/20">
+        <div class="relative z-10">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <span id="hero-badge" class="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-semibold backdrop-blur-sm">
+              🎯 TN Public Exam • All 74 Sums + Log Tables
+            </span>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <button onclick="triggerAppInstall()" id="btn-install-app"
+                class="px-3 py-1 rounded-full bg-amber-300 hover:bg-amber-200 text-slate-900 text-xs font-extrabold shadow flex items-center gap-1 transition active:scale-95">
+                <span>📲</span>
+                <span id="lbl-install-app">Install App</span>
+              </button>
+              <button onclick="toggleLanguage()" id="btn-lang-hero"
+                class="px-3 py-1 rounded-full bg-white text-indigo-700 text-xs font-extrabold shadow hover:bg-indigo-50 transition">
+                Switch to தமிழ் Medium
+              </button>
+            </div>
+          </div>
+
+          <h2 id="hero-title" class="text-xl sm:text-2xl font-extrabold leading-snug mb-1">
+            Play Physics Numericals & Win Chocolates!
+          </h2>
+          <p id="hero-desc" class="text-indigo-100 text-xs sm:text-sm mb-4">
+            Enter your details below, listen with voice read-aloud, earn chocolates after every sum, and download your final PDF scorecard.
+          </p>
+
+          <!-- Progress Bar -->
+          <div class="bg-black/20 rounded-2xl p-3 backdrop-blur-sm">
+            <div class="flex justify-between text-xs font-semibold mb-1.5">
+              <span id="progress-label">Mastery Progress (<span id="solved-count">0</span>/74 Solved)</span>
+              <span id="solved-percent">0%</span>
+            </div>
+            <div class="w-full h-2.5 bg-white/20 rounded-full overflow-hidden">
+              <div id="progress-bar" class="h-full bg-emerald-400 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="absolute -right-10 -bottom-10 w-44 h-44 rounded-full bg-white/10 pointer-events-none"></div>
+      </div>
+
+      <!-- Student Details Form Card -->
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 id="student-form-heading" class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <span>🎓</span> Student Details
+          </h3>
+          <span id="student-saved-badge" class="hidden text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+            ✓ Saved
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label id="lbl-student-name" for="inp-student-name" class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+              Student Name *
+            </label>
+            <input id="inp-student-name" type="text" placeholder="e.g., Karthik S"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+
+          <div>
+            <label id="lbl-school-name" for="inp-school-name" class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+              School Name *
+            </label>
+            <input id="inp-school-name" type="text" placeholder="e.g., Govt Hr Sec School"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+
+          <div>
+            <label id="lbl-class" for="inp-class" class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+              Class
+            </label>
+            <input id="inp-class" type="text" value="12" placeholder="12"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+
+          <div>
+            <label id="lbl-section" for="inp-section" class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+              Section
+            </label>
+            <input id="inp-section" type="text" placeholder="e.g., A"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+        </div>
+
+        <p id="student-form-error" class="hidden text-xs font-bold text-rose-600 dark:text-rose-400"></p>
+      </div>
+
+      <!-- Game Modes Selection -->
+      <div class="space-y-3">
+        <h3 id="modes-heading" class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          🎮 Choose Game Mode
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <!-- Mode 1: All Practice -->
+          <button onclick="startSessionWithValidation('practice', 'all')"
+            class="text-left p-4 rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-500/30 hover:border-indigo-500 shadow-sm hover:shadow-md transition group">
+            <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl mb-2.5 group-hover:scale-110 transition">
+              📘
+            </div>
+            <div id="mode-all-title" class="font-extrabold text-sm text-slate-900 dark:text-white">All 74 Sums (Practice)</div>
+            <div id="mode-all-desc" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Hints, Log Tables & voice read-aloud</div>
+          </button>
+
+          <!-- Mode 2: Quick Challenge (10 Sums) -->
+          <button onclick="startSessionWithValidation('challenge', 10)"
+            class="text-left p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-amber-500 shadow-sm hover:shadow-md transition group">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl mb-2.5 group-hover:scale-110 transition">
+              ⚡
+            </div>
+            <div id="mode-q10-title" class="font-extrabold text-sm text-slate-900 dark:text-white">Quick Challenge (10 Sums)</div>
+            <div id="mode-q10-desc" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Random 10 sums + Final PDF scorecard</div>
+          </button>
+
+          <!-- Mode 3: Challenge (15 Sums) -->
+          <button onclick="startSessionWithValidation('challenge', 15)"
+            class="text-left p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 shadow-sm hover:shadow-md transition group">
+            <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl mb-2.5 group-hover:scale-110 transition">
+              🏆
+            </div>
+            <div id="mode-q15-title" class="font-extrabold text-sm text-slate-900 dark:text-white">Mega Challenge (15 Sums)</div>
+            <div id="mode-q15-desc" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Random 15 sums + Chocolate shower</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Unit-Wise Practice Grid -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 id="units-heading" class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            📚 Unit-Wise Practice
+          </h3>
+          <span id="units-tap-hint" class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">Tap unit to start</span>
+        </div>
+        <div id="unit-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+      </div>
+
+    </section>
+
+    <!-- ==================== VIEW 2: QUESTION & GAMEPLAY ARENA ==================== -->
+    <section id="view-arena" class="hidden space-y-4 animate-pop">
+
+      <!-- Student Active Badge & Arena Controls -->
+      <div class="flex flex-wrap items-center justify-between gap-2 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="flex items-center gap-2 min-w-0">
+          <button onclick="goHome()" id="btn-arena-home"
+            class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition">
+            🏠 <span id="lbl-home-btn">Home</span>
+          </button>
+          <div class="truncate text-xs">
+            <span id="badge-student-info" class="font-extrabold text-indigo-600 dark:text-indigo-400">Student</span>
+            <span id="badge-school-info" class="text-slate-500 dark:text-slate-400 hidden sm:inline">• School</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs font-bold">
+          <span id="arena-counter-badge" class="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+            1 / 74
+          </span>
+          <span class="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+            <span id="lbl-score-short">Score</span>: <span id="arena-score-val">0</span>
+          </span>
+          <button onclick="openSummaryModalOrScreen()" id="btn-finish-early"
+            class="px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 hover:bg-amber-200 transition">
+            📊 <span id="lbl-result-btn">Scorecard</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Question Pill Strip (Practice / Unit Mode) -->
+      <div id="question-pills-strip" class="hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1"></div>
+
+      <!-- Question Card -->
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-md space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span id="q-unit-badge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
+              Unit 1
+            </span>
+            <span id="q-ref-badge" class="text-xs font-semibold text-slate-400">
+              EXAMPLE 4.16
+            </span>
+          </div>
+
+          <!-- Speaker Button ("Read Aloud") -->
+          <button onclick="speakCurrentQuestion()" id="btn-speak-q"
+            class="px-3 py-1.5 rounded-xl bg-sky-100 dark:bg-sky-950/80 hover:bg-sky-200 dark:hover:bg-sky-900 text-sky-800 dark:text-sky-300 text-xs font-extrabold flex items-center gap-1.5 transition active:scale-95">
+            <span>🔊</span>
+            <span id="lbl-read-aloud">Read Aloud</span>
+          </button>
+        </div>
+
+        <!-- Question Text -->
+        <p id="q-text" class="text-base sm:text-lg font-bold leading-relaxed text-slate-800 dark:text-slate-100">
+          Loading question...
+        </p>
+
+        <!-- Circuit / Diagram SVG Container -->
+        <div id="q-diagram" class="hidden p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 flex justify-center">
+        </div>
+
+        <!-- Hint & Solution Buttons -->
+        <div class="flex flex-wrap gap-2 pt-1">
+          <button onclick="toggleHint()" id="btn-toggle-hint"
+            class="px-3.5 py-2 rounded-xl bg-amber-100 dark:bg-amber-950/70 hover:bg-amber-200 text-amber-900 dark:text-amber-300 text-xs font-bold transition">
+            💡 <span id="lbl-hint-btn">Formula Hint</span>
+          </button>
+          <button onclick="toggleSolution()" id="btn-toggle-sol"
+            class="px-3.5 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/70 hover:bg-emerald-200 text-emerald-900 dark:text-emerald-300 text-xs font-bold transition">
+            📝 <span id="lbl-sol-btn">Step-by-Step Solution</span>
+          </button>
+          <button onclick="toggleLogMethod()" id="btn-toggle-log"
+            class="hidden px-3.5 py-2 rounded-xl bg-rose-100 dark:bg-rose-950/70 hover:bg-rose-200 text-rose-900 dark:text-rose-300 text-xs font-extrabold transition flex items-center gap-1">
+            <span>🔢</span> <span id="lbl-log-btn">Log / ALog Table</span>
+          </button>
+        </div>
+
+        <!-- Hint Box -->
+        <div id="hint-box" class="hidden p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs sm:text-sm space-y-1">
+          <div id="lbl-hint-title" class="font-extrabold text-amber-900 dark:text-amber-300">💡 Formula Hint:</div>
+          <div id="hint-content" class="text-amber-800 dark:text-amber-200 font-medium leading-relaxed"></div>
+        </div>
+
+        <!-- Dedicated Log Method Box (Only for sums that require Log/ALog) -->
+        <div id="log-method-box" class="hidden p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/70 text-xs sm:text-sm space-y-2.5 animate-pop">
+          <div class="flex items-center justify-between gap-2">
+            <span id="lbl-log-box-title" class="font-extrabold text-rose-700 dark:text-rose-300">
+              🔢 Log & Antilog Table (மடக்கை அட்டவணை)
+            </span>
+            <button onclick="speakCurrentLogMethod()" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-300 text-[11px] font-bold border border-rose-200 dark:border-rose-700 hover:bg-rose-50 transition">
+              🔊 <span id="lbl-listen-log">Listen Log</span>
+            </button>
+          </div>
+          <div id="log-method-content"></div>
+        </div>
+
+        <!-- Answer Options -->
+        <div id="options-grid" class="grid grid-cols-1 gap-2.5 pt-1"></div>
+
+        <!-- Chocolate Encouragement Banner -->
+        <div id="feedback-banner" class="hidden p-4 rounded-2xl text-sm font-extrabold animate-pop flex items-center justify-between gap-2">
+          <span id="feedback-text"></span>
+          <span class="text-xl shrink-0">🍫🎉</span>
+        </div>
+
+        <!-- Worked Out Step-by-Step Solution Box -->
+        <div id="solution-box" class="hidden p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span id="lbl-sol-title" class="font-extrabold text-indigo-600 dark:text-indigo-400">
+              ✅ Step-by-Step Solution:
+            </span>
+            <div class="flex items-center gap-1.5">
+              <button onclick="speakCurrentSolution()" id="btn-speak-sol"
+                class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold border border-slate-200 dark:border-slate-600 hover:bg-slate-50 transition">
+                🔊 <span id="lbl-listen-sol">Listen Solution</span>
+              </button>
+              <button onclick="stopSpeech()" id="btn-stop-speech"
+                class="px-2 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-[11px] font-bold border border-rose-200 dark:border-rose-800 hover:bg-rose-100 transition">
+                ⏹️
+              </button>
+            </div>
+          </div>
+
+          <!-- Structured TN SCERT Given / To Find / Formula / Log Table -->
+          <div id="solution-structured" class="space-y-2.5"></div>
+
+          <div id="solution-content" class="space-y-1.5 text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-line"></div>
+        </div>
+
+        <!-- Previous / Next Navigation -->
+        <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+          <button onclick="prevQuestion()" id="btn-prev"
+            class="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold transition">
+            ← <span id="lbl-prev">Previous</span>
+          </button>
+
+          <button onclick="nextQuestion()" id="btn-next"
+            class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition">
+            <span id="lbl-next">Next Sum</span> →
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== VIEW 3: FINAL SCORE SCREEN & PDF REPORT ==================== -->
+    <section id="view-result" class="hidden space-y-4 animate-pop">
+
+      <!-- Action Bar (Hidden in Print) -->
+      <div class="no-print flex flex-wrap items-center justify-between gap-2">
+        <button onclick="goHome()"
+          class="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold hover:bg-slate-50 transition">
+          🏠 <span id="lbl-res-home">Back to Home</span>
+        </button>
+
+        <button onclick="downloadResultPDF()"
+          class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition active:scale-95">
+          <span>📄</span>
+          <span id="lbl-download-pdf">Download PDF Scorecard</span>
+        </button>
+      </div>
+
+      <!-- Printable Scorecard Container -->
+      <div id="printable-report" class="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-lg space-y-5">
+
+        <!-- Report Header -->
+        <div class="border-b border-slate-200 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div id="rep-teacher-line" class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+              SARADHA M, GGHSS ANTHIYUR — Physics Game Hub
+            </div>
+            <h2 id="rep-title" class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5">
+              🏆 Final Score & Performance Report
+            </h2>
+          </div>
+          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <div id="rep-date"></div>
+            <div id="rep-medium-label"></div>
+          </div>
+        </div>
+
+        <!-- Student Info Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80">
+          <div>
+            <div id="rep-lbl-name" class="text-slate-400 font-semibold">Student Name</div>
+            <div id="rep-val-name" class="font-extrabold text-sm text-slate-800 dark:text-slate-100 mt-0.5">-</div>
+          </div>
+          <div>
+            <div id="rep-lbl-class" class="text-slate-400 font-semibold">Class & Sec</div>
+            <div id="rep-val-class" class="font-extrabold text-sm text-slate-800 dark:text-slate-100 mt-0.5">-</div>
+          </div>
+          <div class="col-span-2">
+            <div id="rep-lbl-school" class="text-slate-400 font-semibold">School Name</div>
+            <div id="rep-val-school" class="font-extrabold text-sm text-slate-800 dark:text-slate-100 mt-0.5">-</div>
+          </div>
+        </div>
+
+        <!-- Summary Metrics -->
+        <div class="grid grid-cols-3 gap-3 text-center">
+          <div class="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900/50">
+            <div id="rep-score-val" class="text-xl sm:text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">0/0</div>
+            <div id="rep-score-lbl" class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Total Score</div>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-900/50">
+            <div id="rep-acc-val" class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">0%</div>
+            <div id="rep-acc-lbl" class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Accuracy</div>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-100 dark:border-amber-900/50">
+            <div id="rep-choco-val" class="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400">0 🍫</div>
+            <div id="rep-choco-lbl" class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Chocolates</div>
+          </div>
+        </div>
+
+        <!-- Detailed Attempted Questions Breakdown -->
+        <div class="space-y-2.5">
+          <h3 id="rep-breakdown-heading" class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            📋 Question-by-Question Summary
+          </h3>
+          <div id="rep-answers-list" class="space-y-2 max-h-[420px] overflow-y-auto pr-1"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast Message -->
+  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden px-4 py-2.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold shadow-lg text-center max-w-[90vw]">
+  </div>
+
+  <!-- Student Attendance & Install Help Modal -->
+  <div id="attendance-modal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 animate-pop">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+        <h3 id="att-modal-title" class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+          <span>👥</span> Students Attended (<span id="att-modal-count">0</span>)
+        </h3>
+        <button onclick="closeAttendanceModal()" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200">
+          ✕
+        </button>
+      </div>
+      <div id="att-modal-list" class="max-h-72 overflow-y-auto space-y-2 text-xs"></div>
+      <div class="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
+        <span id="att-modal-note" class="text-[11px] text-slate-400">Tracks students who attended on this device/app</span>
+        <button onclick="closeAttendanceModal()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 0. PWA MANIFEST & OFFLINE SERVICE WORKER REGISTRATION (FOR ADD TO HOME SCREEN)
+    // =========================================================================
+    let deferredInstallPrompt = null;
+
+    (function initPWA() {
+      try {
+        const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#4f46e5"/><text x="96" y="122" font-size="96" text-anchor="middle" fill="#ffffff" font-family="sans-serif" font-weight="bold">⚡</text></svg>`;
+        const iconUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(iconSvg);
+        const manifestObj = {
+          name: "Physics Master 12 — SARADHA M",
+          short_name: "Physics 12",
+          start_url: "./",
+          display: "standalone",
+          background_color: "#0f172a",
+          theme_color: "#4f46e5",
+          icons: [
+            { src: iconUrl, sizes: "192x192", type: "image/svg+xml" },
+            { src: iconUrl, sizes: "512x512", type: "image/svg+xml" }
+          ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: "application/manifest+json" });
+        const manifestLink = document.createElement("link");
+        manifestLink.rel = "manifest";
+        manifestLink.href = URL.createObjectURL(manifestBlob);
+        document.head.appendChild(manifestLink);
+
+        if ("serviceWorker" in navigator && (location.protocol === "https:" || location.protocol === "http:")) {
+          const swCode = `
+            const CACHE_NAME = 'physics-master-12-v1';
+            self.addEventListener('install', (e) => {
+              self.skipWaiting();
+              e.waitUntil(
+                caches.open(CACHE_NAME).then((cache) => cache.addAll(['./']).catch(() => {}))
+              );
+            });
+            self.addEventListener('activate', (e) => {
+              e.waitUntil(self.clients.claim());
+            });
+            self.addEventListener('fetch', (e) => {
+              e.respondWith(
+                caches.match(e.request).then((cached) => {
+                  return cached || fetch(e.request).then((res) => {
+                    const copy = res.clone();
+                    caches.open(CACHE_NAME).then((c) => c.put(e.request, copy)).catch(() => {});
+                    return res;
+                  }).catch(() => cached);
+                })
+              );
+            });
+          `;
+          const swBlob = new Blob([swCode], { type: "application/javascript" });
+          navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+        }
+      } catch (err) {}
+    })();
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+    });
+
+    async function triggerAppInstall() {
+      const isTa = appState.lang === "ta";
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const choice = await deferredInstallPrompt.userChoice;
+        if (choice && choice.outcome === "accepted") {
+          showToast(isTa ? "✅ ஆப் வெற்றிகரமாக இன்ஸ்டால் செய்யப்பட்டது!" : "✅ App installed to your Home Screen!");
+        }
+        deferredInstallPrompt = null;
+      } else {
+        showToast(
+          isTa
+            ? "📲 Chrome-ல் மேல் வலது (⋮) தட்டி 'Add to Home screen' / 'Install app' தேர்வு செய்யவும் (Offline-லும் இயங்கும்)!"
+            : "📲 Tap Chrome menu (⋮) → 'Add to Home screen' or 'Install app' to save on phone for Offline use!"
+        );
+      }
+    }
+
+    // =========================================================================
+    // 1. LOCALIZATION DICTIONARY (ENGLISH & TAMIL MEDIUM)
+    // =========================================================================
+    const I18N = {
+      en: {
+        subtitle: "Class 12 Physics • 74 Public Exam Numericals",
+        langTopBtn: "தமிழ்",
+        langHeroBtn: "Switch to தமிழ் Medium",
+        installApp: "Install App",
+        heroBadge: "🎯 TN Public Exam • 74 Sums + PDF Log Tables",
+        heroTitle: "Play Physics Numericals & Win Chocolates!",
+        heroDesc: "Enter your details below, listen with voice read-aloud, earn chocolates after every sum, and download your final PDF scorecard.",
+        progressPrefix: "Mastery Progress",
+        solvedSuffix: "Solved",
+        studentHeading: "Student Details",
+        savedBadge: "✓ Saved",
+        lblStudentName: "Student Name *",
+        phStudentName: "e.g., Karthik S",
+        lblSchoolName: "School Name *",
+        phSchoolName: "e.g., Govt Hr Sec School",
+        lblClass: "Class",
+        lblSection: "Section",
+        phSection: "e.g., A",
+        errMissingStudent: "⚠️ Please enter both Student Name and School Name before starting!",
+        modesHeading: "🎮 Choose Game Mode",
+        modeAllTitle: "All 74 Sums (Practice)",
+        modeAllDesc: "Hints, Log Tables & voice read-aloud",
+        modeQ10Title: "Quick Challenge (10 Sums)",
+        modeQ10Desc: "Random 10 sums + Final PDF scorecard",
+        modeQ15Title: "Mega Challenge (15 Sums)",
+        modeQ15Desc: "Random 15 sums + Chocolate shower",
+        unitsHeading: "📚 Unit-Wise Practice",
+        unitsTapHint: "Tap unit to start",
+        homeBtn: "Home",
+        scoreShort: "Score",
+        resultBtn: "Scorecard",
+        readAloud: "Read Aloud",
+        hintBtn: "Formula Hint",
+        solBtn: "Step-by-Step Solution",
+        logBtn: "Log / ALog Table",
+        logBoxTitle: "🔢 Log & Antilog Table (PDF Method)",
+        listenLog: "Listen Log",
+        hintTitle: "💡 Formula Hint:",
+        solTitle: "✅ Step-by-Step Solution:",
+        listenSol: "Listen Solution",
+        prevBtn: "Previous",
+        nextBtn: "Next Sum",
+        finishBtn: "Finish & View Scorecard",
+        resHome: "Back to Home",
+        downloadPdf: "Download PDF Scorecard",
+        repTitle: "🏆 Final Score & Performance Report",
+        repMedium: "Medium: English",
+        repLblName: "Student Name",
+        repLblClass: "Class & Sec",
+        repLblSchool: "School Name",
+        repScoreLbl: "Total Score",
+        repAccLbl: "Accuracy",
+        repChocoLbl: "Chocolates",
+        repBreakdown: "📋 Question-by-Question Summary",
+        noAttemptsYet: "No questions answered yet in this session.",
+        yourAns: "Your Answer",
+        correctAns: "Correct Answer",
+        speechUnsupported: "Voice read-aloud is not supported on this browser.",
+        correctMsg: [
+          "Awesome! Correct Answer — Chocolate treat for you! 🍫",
+          "Superb! Spot on! Enjoy your chocolate reward! 🍫",
+          "Brilliant work! Keep collecting chocolates! 🍫"
+        ],
+        attemptEncourageMsg: [
+          "Good try! No chocolate this time — check the step-by-step solution below and try the next sum! 💪",
+          "Almost there! Study the formula steps below to win chocolates on the next sum! 📘"
+        ]
+      },
+      ta: {
+        subtitle: "12-ஆம் வகுப்பு இயற்பியல் • 74 பொதுத்தேர்வு கணக்குகள்",
+        langTopBtn: "English",
+        langHeroBtn: "Switch to English Medium",
+        installApp: "ஆப் பதிவிறக்கு",
+        heroBadge: "🎯 தமிழ்நாடு பொதுத்தேர்வு • 74 கணக்குகள் + PDF மடக்கை",
+        heroTitle: "இயற்பியல் கணக்குகளை விளையாடி சாக்லேட் வெல்லுங்கள்!",
+        heroDesc: "உங்கள் விவரங்களை உள்ளிட்டு, வாய்ஸ் மூலம் கேள்வியைக் கேட்டு, ஒவ்வொரு கணக்கிற்கும் சாக்லேட் பரிசு பெற்று PDF மதிப்பெண் சான்றிதழைப் பதிவிறக்கவும்.",
+        progressPrefix: "பயிற்சி முன்னேற்றம்",
+        solvedSuffix: "முடிந்தது",
+        studentHeading: "மாணவர் விவரங்கள்",
+        savedBadge: "✓ சேமிக்கப்பட்டது",
+        lblStudentName: "மாணவர் பெயர் *",
+        phStudentName: "எ.கா: கார்த்திக் S",
+        lblSchoolName: "பள்ளியின் பெயர் *",
+        phSchoolName: "எ.கா: அரசு மேல்நிலைப் பள்ளி",
+        lblClass: "வகுப்பு",
+        lblSection: "பிரிவு (Section)",
+        phSection: "எ.கா: A",
+        errMissingStudent: "⚠️ தொடங்குவதற்கு முன் மாணவர் பெயர் மற்றும் பள்ளியின் பெயரை உள்ளிடவும்!",
+        modesHeading: "🎮 விளையாட்டு முறையைத் தேர்ந்தெடுக்கவும்",
+        modeAllTitle: "அனைத்து 74 கணக்குகள் (பயிற்சி)",
+        modeAllDesc: "சூத்திரக் குறிப்பு, Log அட்டவணை & வாய்ஸ் வசதி",
+        modeQ10Title: "விரைவு சவால் (10 கணக்குகள்)",
+        modeQ10Desc: "ரேண்டம் 10 கணக்குகள் + PDF மதிப்பெண் அட்டை",
+        modeQ15Title: "மெகா சவால் (15 கணக்குகள்)",
+        modeQ15Desc: "ரேண்டம் 15 கணக்குகள் + சாக்லேட் பரிசு மழை",
+        unitsHeading: "📚 பாடம் வாரியான பயிற்சி (Unit-Wise)",
+        unitsTapHint: "பாடத்தைத் தட்டித் தொடங்கவும்",
+        homeBtn: "முகப்பு",
+        scoreShort: "மதிப்பெண்",
+        resultBtn: "மதிப்பெண் அட்டை",
+        readAloud: "கேள்வியைக் கேள்",
+        hintBtn: "சூத்திரக் குறிப்பு",
+        solBtn: "படிப்படியான தீர்வு",
+        logBtn: "Log / ALog அட்டவணை",
+        logBoxTitle: "🔢 Log & ALog மடக்கை அட்டவணை (PDF முறை)",
+        listenLog: "Log கேட்க",
+        hintTitle: "💡 சூத்திரக் குறிப்பு:",
+        solTitle: "✅ படிப்படியான தீர்வு:",
+        listenSol: "தீர்வைக் கேள்",
+        prevBtn: "முந்தையது",
+        nextBtn: "அடுத்த கணக்கு",
+        finishBtn: "முடித்து மதிப்பெண் பார்",
+        resHome: "முகப்புக்குத் திரும்பு",
+        downloadPdf: "PDF மதிப்பெண் பதிவிறக்கு",
+        repTitle: "🏆 இறுதி மதிப்பெண் & செயல்திறன் அறிக்கை",
+        repMedium: "பயிற்று மொழி: தமிழ் வழி",
+        repLblName: "மாணவர் பெயர்",
+        repLblClass: "வகுப்பு & பிரிவு",
+        repLblSchool: "பள்ளியின் பெயர்",
+        repScoreLbl: "மொத்த மதிப்பெண்",
+        repAccLbl: "துல்லியம்",
+        repChocoLbl: "சாக்லேட்டுகள்",
+        repBreakdown: "📋 கேள்வி வாரியான விவரம்",
+        noAttemptsYet: "இந்தச் சுற்றில் இன்னும் எந்தக் கேள்விக்கும் விடையளிக்கவில்லை.",
+        yourAns: "உங்கள் விடை",
+        correctAns: "சரியான விடை",
+        speechUnsupported: "இந்த பிரவுசரில் வாய்ஸ் வசதி இல்லை.",
+        correctMsg: [
+          "அருமை! சரியான விடை — உங்களுக்கு சாக்லேட் பரிசு! 🍫",
+          "சூப்பர்! மிகச் சரியாகச் செய்தீர்கள் — சாக்லேட் பரிசு! 🍫",
+          "மிக நன்று! தொடர்ந்து சாக்லேட்டுகளை வெல்லுங்கள்! 🍫"
+        ],
+        attemptEncourageMsg: [
+          "நல்ல முயற்சி! இந்த முறை சாக்லேட் இல்லை — கீழே உள்ள தீர்வைப் பார்த்து அடுத்த கணக்கில் சாக்லேட் வெல்லுங்கள்! 💪",
+          "கவலை வேண்டாம்! கீழே உள்ள சூத்திரத்தைப் புரிந்து கொண்டு அடுத்த கணக்கில் சாக்லேட் வெல்லுங்கள்! 📘"
+        ]
+      }
+    };
+
+    // =========================================================================
+    // 2. SUBSCRIPT / SUPERSCRIPT PHYSICS FORMATTER (EXAM ACCURACY)
+    // =========================================================================
+    function formatPhysicsHTML(str) {
+      if (!str) return "";
+      let s = String(str);
+      // 1. Overbars for logic expressions (B̄, C̄, Ā, (A·B)̄, (X + C)̄)
+      s = s.replace(/([ABC])\u0304/g, '<span style="text-decoration:overline">$1</span>');
+      // 2. Specific underscore subscripts
+      s = s.replace(/\b(V|I|R|N|q|r|n|a|t|m|C|L|P|U|E|F|B|T|Φ|χ|μ|ε|σ|λ|ν|ω|θ|i)_(p|s|m|e|0|1|2|3|4|5|BE|CE|CC|L|Z|rms|avg|tot|max|min|osc|air|iron|ab|AB|BC|PQ|RS|12|21|13|14|20|100|E|G|H|V|c|p|n|f|i|0)\b/g, '$1<sub>$2</sub>');
+      // 3. Direct physics notation (handles word boundaries AND Tamil/punctuation suffixes like q1-லிருந்து, R1-க்கு, T½A-ன்)
+      const subRules = [
+        [/Np(?![a-zA-Z0-9])/g, 'N<sub>p</sub>'],
+        [/Ns(?![a-zA-Z0-9])/g, 'N<sub>s</sub>'],
+        [/Vp(?![a-zA-Z0-9])/g, 'V<sub>p</sub>'],
+        [/Vs(?![a-zA-Z0-9])/g, 'V<sub>s</sub>'],
+        [/VBE(?![a-zA-Z0-9])/g, 'V<sub>BE</sub>'],
+        [/VCE(?![a-zA-Z0-9])/g, 'V<sub>CE</sub>'],
+        [/VCC(?![a-zA-Z0-9])/g, 'V<sub>CC</sub>'],
+        [/IB(?![a-zA-Z0-9])/g, 'I<sub>B</sub>'],
+        [/IC(?![a-zA-Z0-9])/g, 'I<sub>C</sub>'],
+        [/RB(?![a-zA-Z0-9])/g, 'R<sub>B</sub>'],
+        [/RC(?![a-zA-Z0-9])/g, 'R<sub>C</sub>'],
+        [/RL(?![a-zA-Z0-9])/g, 'R<sub>L</sub>'],
+        [/Rs(?![a-zA-Z0-9])/g, 'R<sub>s</sub>'],
+        [/Rp1(?![a-zA-Z0-9])/g, 'R<sub>p1</sub>'],
+        [/Rp2(?![a-zA-Z0-9])/g, 'R<sub>p2</sub>'],
+        [/Rp3(?![a-zA-Z0-9])/g, 'R<sub>p3</sub>'],
+        [/Rp(?![a-zA-Z0-9])/g, 'R<sub>p</sub>'],
+        [/Req(?![a-zA-Z0-9])/g, 'R<sub>eq</sub>'],
+        [/RAB(?![a-zA-Z0-9])/g, 'R<sub>AB</sub>'],
+        [/R0(?![a-zA-Z0-9])/g, 'R<sub>0</sub>'],
+        [/R1(?![a-zA-Z0-9])/g, 'R<sub>1</sub>'],
+        [/R2(?![a-zA-Z0-9])/g, 'R<sub>2</sub>'],
+        [/R3(?![a-zA-Z0-9])/g, 'R<sub>3</sub>'],
+        [/R20(?![a-zA-Z0-9])/g, 'R<sub>20</sub>'],
+        [/R100(?![a-zA-Z0-9])/g, 'R<sub>100</sub>'],
+        [/RT(?![a-zA-Z0-9])/g, 'R<sub>T</sub>'],
+        [/T0(?![a-zA-Z0-9])/g, 'T<sub>0</sub>'],
+        [/T1(?![a-zA-Z0-9])/g, 'T<sub>1</sub>'],
+        [/T2(?![a-zA-Z0-9])/g, 'T<sub>2</sub>'],
+        [/T½A(?![a-zA-Z0-9])/g, 'T<sub>½A</sub>'],
+        [/T½B(?![a-zA-Z0-9])/g, 'T<sub>½B</sub>'],
+        [/T½(?![a-zA-Z0-9])/g, 'T<sub>½</sub>'],
+        [/XL(?![a-zA-Z0-9])/g, 'X<sub>L</sub>'],
+        [/XC(?![a-zA-Z0-9])/g, 'X<sub>C</sub>'],
+        [/fr(?![a-zA-Z0-9])/g, 'f<sub>r</sub>'],
+        [/fosc(?![a-zA-Z0-9])/g, 'f<sub>osc</sub>'],
+        [/vd(?![a-zA-Z0-9])/g, 'v<sub>d</sub>'],
+        [/BH(?![a-zA-Z0-9])/g, 'B<sub>H</sub>'],
+        [/BV(?![a-zA-Z0-9])/g, 'B<sub>V</sub>'],
+        [/B0(?![a-zA-Z0-9])/g, 'B<sub>0</sub>'],
+        [/E0(?![a-zA-Z0-9])/g, 'E<sub>0</sub>'],
+        [/Emax(?![a-zA-Z0-9])/g, 'E<sub>max</sub>'],
+        [/Vmax(?![a-zA-Z0-9])/g, 'V<sub>max</sub>'],
+        [/τmax(?![a-zA-Z0-9])/g, 'τ<sub>max</sub>'],
+        [/Eg(?![a-zA-Z0-9])/g, 'E<sub>g</sub>'],
+        [/Φ0(?![a-zA-Z0-9])/g, 'Φ<sub>0</sub>'],
+        [/ΦE(?![a-zA-Z0-9])/g, 'Φ<sub>E</sub>'],
+        [/ΦB(?![a-zA-Z0-9])/g, 'Φ<sub>B</sub>'],
+        [/UB(?![a-zA-Z0-9])/g, 'U<sub>B</sub>'],
+        [/λ0(?![a-zA-Z0-9])/g, 'λ<sub>0</sub>'],
+        [/ν0(?![a-zA-Z0-9])/g, 'ν<sub>0</sub>'],
+        [/χm(?![a-zA-Z0-9])/g, 'χ<sub>m</sub>'],
+        [/χx(?![a-zA-Z0-9])/g, 'χ<sub>x</sub>'],
+        [/χy(?![a-zA-Z0-9])/g, 'χ<sub>y</sub>'],
+        [/Mx(?![a-zA-Z0-9])/g, 'M<sub>x</sub>'],
+        [/My(?![a-zA-Z0-9])/g, 'M<sub>y</sub>'],
+        [/qm(?![a-zA-Z0-9])/g, 'q<sub>m</sub>'],
+        [/pm(?![a-zA-Z0-9])/g, 'p<sub>m</sub>'],
+        [/q1(?![a-zA-Z0-9])/g, 'q<sub>1</sub>'],
+        [/q2(?![a-zA-Z0-9])/g, 'q<sub>2</sub>'],
+        [/q3(?![a-zA-Z0-9])/g, 'q<sub>3</sub>'],
+        [/r1(?![a-zA-Z0-9])/g, 'r<sub>1</sub>'],
+        [/r2(?![a-zA-Z0-9])/g, 'r<sub>2</sub>'],
+        [/r5(?![a-zA-Z0-9])/g, 'r<sub>5</sub>'],
+        [/μ0(?![a-zA-Z0-9])/g, 'μ<sub>0</sub>'],
+        [/μr(?![a-zA-Z0-9])/g, 'μ<sub>r</sub>'],
+        [/ε0(?![a-zA-Z0-9])/g, 'ε<sub>0</sub>'],
+        [/εr(?![a-zA-Z0-9])/g, 'ε<sub>r</sub>'],
+        [/me(?![a-zA-Z0-9])/g, 'm<sub>e</sub>'],
+        [/mp(?![a-zA-Z0-9])/g, 'm<sub>p</sub>'],
+        [/Fe(?![a-zA-Z0-9])/g, 'F<sub>e</sub>'],
+        [/FG(?![a-zA-Z0-9])/g, 'F<sub>G</sub>'],
+        [/N0(?![a-zA-Z0-9])/g, 'N<sub>0</sub>'],
+        [/NA(?![a-zA-Z0-9])/g, 'N<sub>A</sub>'],
+        [/nA(?![a-zA-Z0-9])/g, 'n<sub>A</sub>'],
+        [/nB(?![a-zA-Z0-9])/g, 'n<sub>B</sub>'],
+        [/nα(?![a-zA-Z0-9])/g, 'n<sub>α</sub>'],
+        [/nβ(?![a-zA-Z0-9])/g, 'n<sub>β</sub>'],
+        [/VZ(?![a-zA-Z0-9])/g, 'V<sub>Z</sub>'],
+        [/IZ(?![a-zA-Z0-9])/g, 'I<sub>Z</sub>'],
+        [/IL(?![a-zA-Z0-9])/g, 'I<sub>L</sub>'],
+        [/Im(?![a-zA-Z0-9])/g, 'I<sub>m</sub>'],
+        [/Iavg(?![a-zA-Z0-9])/g, 'I<sub>avg</sub>'],
+        [/Irms(?![a-zA-Z0-9])/g, 'I<sub>rms</sub>'],
+        [/Lair(?![a-zA-Z0-9])/g, 'L<sub>air</sub>'],
+        [/Liron(?![a-zA-Z0-9])/g, 'L<sub>iron</sub>'],
+        [/Lகாற்று/g, 'L<sub>காற்று</sub>'],
+        [/Lஇரும்பு/g, 'L<sub>இரும்பு</sub>'],
+        [/Pbat(?![a-zA-Z0-9])/g, 'P<sub>bat</sub>'],
+        [/Pres(?![a-zA-Z0-9])/g, 'P<sub>res</sub>'],
+        [/PR(?![a-zA-Z0-9])/g, 'P<sub>R</sub>'],
+        [/Vtot(?![a-zA-Z0-9])/g, 'V<sub>tot</sub>'],
+        [/YNOT(?![a-zA-Z0-9])/g, 'Y<sub>NOT</sub>'],
+        [/YAND(?![a-zA-Z0-9])/g, 'Y<sub>AND</sub>'],
+        [/YOR(?![a-zA-Z0-9])/g, 'Y<sub>OR</sub>'],
+        [/Y1(?![a-zA-Z0-9])/g, 'Y<sub>1</sub>'],
+        [/Y2(?![a-zA-Z0-9])/g, 'Y<sub>2</sub>'],
+        [/V1(?![a-zA-Z0-9])/g, 'V<sub>1</sub>'],
+        [/V2(?![a-zA-Z0-9])/g, 'V<sub>2</sub>'],
+        [/V20(?![a-zA-Z0-9])/g, 'V<sub>20</sub>'],
+        [/a1(?![a-zA-Z0-9])/g, 'a<sub>1</sub>'],
+        [/a2(?![a-zA-Z0-9])/g, 'a<sub>2</sub>'],
+        [/I1(?![a-zA-Z0-9])/g, 'I<sub>1</sub>'],
+        [/I2(?![a-zA-Z0-9])/g, 'I<sub>2</sub>'],
+        [/l1(?![a-zA-Z0-9])/g, 'l<sub>1</sub>'],
+        [/l2(?![a-zA-Z0-9])/g, 'l<sub>2</sub>'],
+        [/A1(?![a-zA-Z0-9])/g, 'A<sub>1</sub>'],
+        [/A2(?![a-zA-Z0-9])/g, 'A<sub>2</sub>'],
+        [/φ1(?![a-zA-Z0-9])/g, 'φ<sub>1</sub>'],
+        [/φ2(?![a-zA-Z0-9])/g, 'φ<sub>2</sub>'],
+        [/ngo(?![a-zA-Z0-9])/g, 'n<sub>go</sub>'],
+        [/ng(?![a-zA-Z0-9])/g, 'n<sub>g</sub>'],
+        [/no(?![a-zA-Z0-9])/g, 'n<sub>o</sub>'],
+        [/ic(?![a-zA-Z0-9])/g, 'i<sub>c</sub>'],
+        [/ip(?![a-zA-Z0-9])/g, 'i<sub>p</sub>'],
+        [/Vi(?![a-zA-Z0-9])/g, 'V<sub>i</sub>'],
+        [/D1(?![a-zA-Z0-9])/g, 'D<sub>1</sub>'],
+        [/D2(?![a-zA-Z0-9])/g, 'D<sub>2</sub>'],
+        [/log10/g, 'log<sub>10</sub>'],
+        [/₉₂U²³⁵/g, '<sub>92</sub>U<sup>235</sup>'],
+        [/₇₉Au¹⁹⁷/g, '<sub>79</sub>Au<sup>197</sup>']
+      ];
+      for (const [regex, replacement] of subRules) {
+        s = s.replace(regex, replacement);
+      }
+      return s;
+    }
+
+    // =========================================================================
+    // 3. UNITS METADATA & INLINE SVG CIRCUIT DIAGRAMS
+    // =========================================================================
+    const UNITS = [
+      { id: 1, icon: "⚡", en: "Unit 1: Electrostatics", ta: "அலகு 1: நிலைமின்னியல்" },
+      { id: 2, icon: "🔋", en: "Unit 2: Current Electricity", ta: "அலகு 2: மின்னோட்டவியல்" },
+      { id: 3, icon: "🧲", en: "Unit 3: Magnetism & Magnetic Effects", ta: "அலகு 3: காந்தவியல் & மின்னோட்டத்தின் விளைவுகள்" },
+      { id: 4, icon: "🔄", en: "Unit 4: EMI & Alternating Current", ta: "அலகு 4: மின்காந்தத் தூண்டல் & மாறுதிசை மின்னோட்டம்" },
+      { id: 5, icon: "📡", en: "Unit 5: Electromagnetic Waves", ta: "அலகு 5: மின்காந்த அலைகள்" },
+      { id: 6, icon: "🔍", en: "Unit 6: Ray Optics", ta: "அலகு 6: கதிர் ஒளியியல்" },
+      { id: 7, icon: "🌈", en: "Unit 7: Wave Optics", ta: "அலகு 7: அலை ஒளியியல்" },
+      { id: 8, icon: "☢️", en: "Unit 8: Dual Nature of Radiation & Matter", ta: "அலகு 8: கதிர்வீச்சு மற்றும் பருப்பொருளின் இருமைப் பண்பு" },
+      { id: 9, icon: "⚛️", en: "Unit 9: Atomic & Nuclear Physics", ta: "அலகு 9: அணு மற்றும் அணுக்கரு இயற்பியல்" },
+      { id: 10, icon: "💻", en: "Unit 10: Electronics & Communication", ta: "அலகு 10: எலக்ட்ரானியல் மற்றும் தகவல் தொடர்பு" }
+    ];
+
+    const DIAGRAMS = {
+      q4: `<svg viewBox="0 0 300 175" class="w-full max-w-xs h-auto text-slate-800 dark:text-slate-100" fill="none" stroke="currentColor" stroke-width="2">
+        <text x="165" y="18" font-size="11" fill="currentColor" stroke="none" font-weight="bold">VCC = 20 V</text>
+        <line x1="185" y1="24" x2="185" y2="42"/>
+        <polyline points="185,42 178,47 192,53 178,59 192,65 185,70" stroke="#4f46e5"/>
+        <text x="198" y="60" font-size="11" fill="#4f46e5" stroke="none" font-weight="bold">RC = 4 kΩ</text>
+        <line x1="185" y1="70" x2="185" y2="95"/>
+        <circle cx="172" cy="108" r="22" stroke="currentColor" stroke-width="1.5"/>
+        <line x1="163" y1="96" x2="163" y2="120" stroke-width="3"/>
+        <line x1="163" y1="102" x2="185" y2="90"/>
+        <line x1="163" y1="114" x2="185" y2="126"/>
+        <polygon points="178,125 185,126 182,119" fill="currentColor" stroke="none"/>
+        <line x1="185" y1="126" x2="185" y2="152"/>
+        <line x1="173" y1="152" x2="197" y2="152"/>
+        <line x1="178" y1="157" x2="192" y2="157"/>
+        <text x="20" y="102" font-size="11" fill="currentColor" stroke="none" font-weight="bold">Vi = 20 V</text>
+        <line x1="55" y1="108" x2="80" y2="108"/>
+        <polyline points="80,108 85,101 91,115 97,101 103,115 108,108" stroke="#059669"/>
+        <text x="72" y="94" font-size="11" fill="#059669" stroke="none" font-weight="bold">RB = 500 kΩ</text>
+        <line x1="108" y1="108" x2="163" y2="108"/>
+        <text x="142" y="102" font-size="10" fill="currentColor" stroke="none">B</text>
+        <text x="192" y="92" font-size="10" fill="currentColor" stroke="none">C</text>
+        <text x="192" y="132" font-size="10" fill="currentColor" stroke="none">E</text>
+      </svg>`,
+      q10: `<svg viewBox="0 0 320 140" class="w-full max-w-xs h-auto text-slate-800 dark:text-slate-100" fill="none" stroke="currentColor" stroke-width="2">
+        <text x="12" y="34" font-size="12" fill="currentColor" stroke="none" font-weight="bold">A</text>
+        <line x1="26" y1="30" x2="135" y2="30"/>
+        <text x="12" y="64" font-size="12" fill="currentColor" stroke="none" font-weight="bold">B</text>
+        <line x1="26" y1="60" x2="60" y2="60"/>
+        <polygon points="60,48 60,72 84,60" stroke="#e11d48"/>
+        <circle cx="88" cy="60" r="4" stroke="#e11d48"/>
+        <line x1="92" y1="60" x2="135" y2="60"/>
+        <path d="M135,22 L158,22 A22,22 0 0,1 158,68 L135,68 Z" stroke="#4f46e5"/>
+        <line x1="180" y1="45" x2="215" y2="45"/>
+        <text x="12" y="109" font-size="12" fill="currentColor" stroke="none" font-weight="bold">C</text>
+        <line x1="26" y1="105" x2="195" y2="105"/>
+        <line x1="195" y1="105" x2="195" y2="75"/>
+        <line x1="195" y1="75" x2="218" y2="75"/>
+        <path d="M212,38 Q224,60 212,82 Q245,82 262,60 Q245,38 212,38 Z" stroke="#059669"/>
+        <line x1="262" y1="60" x2="292" y2="60"/>
+        <text x="296" y="64" font-size="13" fill="currentColor" stroke="none" font-weight="bold">Y</text>
+      </svg>`,
+      q20: `<svg viewBox="0 0 300 130" class="w-full max-w-xs h-auto text-slate-800 dark:text-slate-100" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="40" y1="30" x2="85" y2="30"/>
+        <polyline points="85,30 90,22 96,38 102,22 108,38 114,22 120,30" stroke="#4f46e5"/>
+        <text x="85" y="16" font-size="11" fill="#4f46e5" stroke="none" font-weight="bold">R1 = 2 Ω</text>
+        <line x1="120" y1="30" x2="170" y2="30"/>
+        <polyline points="170,30 175,22 181,38 187,22 193,38 199,22 205,30" stroke="#059669"/>
+        <text x="170" y="16" font-size="11" fill="#059669" stroke="none" font-weight="bold">R2 = 4 Ω</text>
+        <line x1="205" y1="30" x2="255" y2="30"/>
+        <line x1="255" y1="30" x2="255" y2="100"/>
+        <line x1="40" y1="30" x2="40" y2="100"/>
+        <line x1="40" y1="100" x2="135" y2="100"/>
+        <line x1="135" y1="88" x2="135" y2="112" stroke-width="2.5"/>
+        <line x1="145" y1="93" x2="145" y2="107" stroke-width="3.5"/>
+        <line x1="145" y1="100" x2="255" y2="100"/>
+        <text x="122" y="124" font-size="11" fill="currentColor" stroke="none" font-weight="bold">12 V</text>
+      </svg>`,
+      q27: `<svg viewBox="0 0 310 155" class="w-full max-w-xs h-auto text-slate-800 dark:text-slate-100" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="35" y1="45" x2="35" y2="125"/>
+        <line x1="23" y1="75" x2="47" y2="75" stroke-width="2.5"/>
+        <line x1="28" y1="85" x2="42" y2="85" stroke-width="3.5"/>
+        <text x="8" y="65" font-size="11" fill="currentColor" stroke="none" font-weight="bold">10 V</text>
+        <line x1="35" y1="45" x2="65" y2="45"/>
+        <polyline points="65,45 70,38 76,52 82,38 88,52 93,45" stroke="#4f46e5"/>
+        <text x="64" y="30" font-size="11" fill="#4f46e5" stroke="none" font-weight="bold">R1 = 2 Ω</text>
+        <line x1="93" y1="45" x2="125" y2="45"/>
+        <polygon points="125,36 125,54 143,45" fill="#059669" stroke="#059669"/>
+        <line x1="143" y1="36" x2="143" y2="54" stroke="#059669"/>
+        <text x="126" y="28" font-size="10" fill="#059669" stroke="none" font-weight="bold">D1</text>
+        <line x1="143" y1="45" x2="180" y2="45"/>
+        <polyline points="180,45 185,38 191,52 197,38 203,52 208,45"/>
+        <text x="178" y="30" font-size="11" fill="currentColor" stroke="none" font-weight="bold">R2 = 3 Ω</text>
+        <line x1="208" y1="45" x2="265" y2="45"/>
+        <line x1="110" y1="45" x2="110" y2="95"/>
+        <line x1="110" y1="95" x2="125" y2="95"/>
+        <polygon points="143,86 143,104 125,95" fill="#e11d48" stroke="#e11d48"/>
+        <line x1="125" y1="86" x2="125" y2="104" stroke="#e11d48"/>
+        <text x="126" y="79" font-size="10" fill="#e11d48" stroke="none" font-weight="bold">D2</text>
+        <line x1="143" y1="95" x2="180" y2="95"/>
+        <polyline points="180,95 185,88 191,102 197,88 203,102 208,95"/>
+        <text x="178" y="80" font-size="11" fill="currentColor" stroke="none" font-weight="bold">R3 = 2 Ω</text>
+        <line x1="208" y1="95" x2="265" y2="95"/>
+        <line x1="265" y1="45" x2="265" y2="125"/>
+        <line x1="35" y1="125" x2="265" y2="125"/>
+      </svg>`,
+      q51: `<svg viewBox="0 0 320 140" class="w-full max-w-xs h-auto text-slate-800 dark:text-slate-100" fill="none" stroke="currentColor" stroke-width="2">
+        <text x="12" y="72" font-size="11" fill="currentColor" stroke="none" font-weight="bold">A</text>
+        <circle cx="26" cy="68" r="3" fill="currentColor"/>
+        <line x1="26" y1="68" x2="55" y2="68"/>
+        <line x1="55" y1="40" x2="55" y2="96"/>
+        <line x1="55" y1="40" x2="72" y2="40"/>
+        <polyline points="72,40 76,34 81,46 86,34 91,46 95,40" stroke="#4f46e5"/>
+        <text x="72" y="28" font-size="10" fill="#4f46e5" stroke="none" font-weight="bold">2 Ω</text>
+        <line x1="95" y1="40" x2="112" y2="40"/>
+        <line x1="55" y1="96" x2="72" y2="96"/>
+        <polyline points="72,96 76,90 81,102 86,90 91,102 95,96" stroke="#4f46e5"/>
+        <text x="72" y="114" font-size="10" fill="#4f46e5" stroke="none" font-weight="bold">2 Ω</text>
+        <line x1="95" y1="96" x2="112" y2="96"/>
+        <line x1="112" y1="40" x2="112" y2="96"/>
+        <line x1="112" y1="68" x2="132" y2="68"/>
+        <line x1="132" y1="40" x2="132" y2="96"/>
+        <line x1="132" y1="40" x2="148" y2="40"/>
+        <polyline points="148,40 152,34 157,46 162,34 167,46 171,40" stroke="#059669"/>
+        <text x="148" y="28" font-size="10" fill="#059669" stroke="none" font-weight="bold">4 Ω</text>
+        <line x1="171" y1="40" x2="188" y2="40"/>
+        <line x1="132" y1="96" x2="148" y2="96"/>
+        <polyline points="148,96 152,90 157,102 162,90 167,102 171,96" stroke="#059669"/>
+        <text x="148" y="114" font-size="10" fill="#059669" stroke="none" font-weight="bold">4 Ω</text>
+        <line x1="171" y1="96" x2="188" y2="96"/>
+        <line x1="188" y1="40" x2="188" y2="96"/>
+        <line x1="188" y1="68" x2="208" y2="68"/>
+        <line x1="208" y1="40" x2="208" y2="96"/>
+        <line x1="208" y1="40" x2="224" y2="40"/>
+        <polyline points="224,40 228,34 233,46 238,34 243,46 247,40" stroke="#e11d48"/>
+        <text x="224" y="28" font-size="10" fill="#e11d48" stroke="none" font-weight="bold">6 Ω</text>
+        <line x1="247" y1="40" x2="264" y2="40"/>
+        <line x1="208" y1="96" x2="224" y2="96"/>
+        <polyline points="224,96 228,90 233,102 238,90 243,102 247,96" stroke="#e11d48"/>
+        <text x="224" y="114" font-size="10" fill="#e11d48" stroke="none" font-weight="bold">6 Ω</text>
+        <line x1="247" y1="96" x2="264" y2="96"/>
+        <line x1="264" y1="40" x2="264" y2="96"/>
+        <line x1="264" y1="68" x2="292" y2="68"/>
+        <circle cx="292" cy="68" r="3" fill="currentColor"/>
+        <text x="298" y="72" font-size="11" fill="currentColor" stroke="none" font-weight="bold">B</text>
+      </svg>`,
+      q54: `<svg viewBox="0 0 300 130" class="w-full max-w-xs h-auto text-slate-800 dark:text-slate-100" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="150" cy="65" r="5" fill="#4f46e5" stroke="none"/>
+        <text x="158" y="68" font-size="11" fill="#4f46e5" stroke="none" font-weight="bold">P</text>
+        <line x1="55" y1="30" x2="145" y2="62"/>
+        <polygon points="105,44 96,45 100,51" fill="currentColor" stroke="none"/>
+        <text x="65" y="24" font-size="10" fill="currentColor" stroke="none" font-weight="bold">0.2 A</text>
+        <line x1="155" y1="62" x2="245" y2="30"/>
+        <polygon points="210,43 200,42 204,49" fill="currentColor" stroke="none"/>
+        <text x="205" y="24" font-size="10" fill="currentColor" stroke="none" font-weight="bold">0.4 A</text>
+        <line x1="55" y1="100" x2="145" y2="68"/>
+        <polygon points="105,86 96,85 100,91" fill="currentColor" stroke="none"/>
+        <text x="65" y="114" font-size="10" fill="currentColor" stroke="none" font-weight="bold">0.6 A</text>
+        <line x1="150" y1="12" x2="150" y2="60"/>
+        <polygon points="150,28 146,36 154,36" fill="#e11d48" stroke="none"/>
+        <text x="156" y="26" font-size="10" fill="#e11d48" stroke="none" font-weight="bold">0.5 A</text>
+        <line x1="150" y1="118" x2="150" y2="70"/>
+        <polygon points="150,90 146,98 154,98" fill="currentColor" stroke="none"/>
+        <text x="156" y="115" font-size="10" fill="currentColor" stroke="none" font-weight="bold">0.7 A</text>
+        <line x1="155" y1="68" x2="245" y2="100"/>
+        <polygon points="210,87 200,88 204,81" fill="#059669" stroke="none"/>
+        <text x="218" y="114" font-size="11" fill="#059669" stroke="none" font-weight="bold">I = ?</text>
+      </svg>`,
+      q72: `<svg viewBox="0 0 310 135" class="w-full max-w-xs h-auto text-slate-800 dark:text-slate-100" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="30" y1="30" x2="30" y2="105"/>
+        <line x1="18" y1="62" x2="42" y2="62" stroke-width="2.5"/>
+        <line x1="23" y1="72" x2="37" y2="72" stroke-width="3.5"/>
+        <text x="5" y="54" font-size="10" fill="currentColor" stroke="none" font-weight="bold">15 V</text>
+        <line x1="30" y1="30" x2="75" y2="30"/>
+        <polyline points="75,30 80,23 86,37 92,23 98,37 104,23 110,30" stroke="#4f46e5"/>
+        <text x="72" y="18" font-size="10" fill="#4f46e5" stroke="none" font-weight="bold">Rs = 1 kΩ</text>
+        <line x1="110" y1="30" x2="245" y2="30"/>
+        <line x1="165" y1="30" x2="165" y2="55"/>
+        <polygon points="155,78 175,78 165,58" fill="#059669" stroke="#059669"/>
+        <polyline points="152,55 156,58 174,58 178,61" stroke="#059669"/>
+        <text x="115" y="72" font-size="10" fill="#059669" stroke="none" font-weight="bold">Vz = 9 V</text>
+        <line x1="165" y1="78" x2="165" y2="105"/>
+        <line x1="245" y1="30" x2="245" y2="52"/>
+        <polyline points="245,52 238,57 252,63 238,69 252,75 245,80" stroke="#e11d48"/>
+        <text x="256" y="70" font-size="10" fill="#e11d48" stroke="none" font-weight="bold">RL = 2 kΩ</text>
+        <line x1="245" y1="80" x2="245" y2="105"/>
+        <line x1="30" y1="105" x2="245" y2="105"/>
+      </svg>`,
+      q73: `<svg viewBox="0 0 320 120" class="w-full max-w-xs h-auto text-slate-800 dark:text-slate-100" fill="none" stroke="currentColor" stroke-width="2">
+        <text x="12" y="34" font-size="12" fill="currentColor" stroke="none" font-weight="bold">A</text>
+        <line x1="26" y1="30" x2="95" y2="30"/>
+        <text x="12" y="64" font-size="12" fill="currentColor" stroke="none" font-weight="bold">B</text>
+        <line x1="26" y1="60" x2="95" y2="60"/>
+        <text x="12" y="94" font-size="12" fill="currentColor" stroke="none" font-weight="bold">C</text>
+        <line x1="26" y1="90" x2="180" y2="90"/>
+        <path d="M95,22 L118,22 A22,22 0 0,1 118,68 L95,68 Z" stroke="#4f46e5"/>
+        <circle cx="144" cy="45" r="4" stroke="#4f46e5"/>
+        <text x="145" y="32" font-size="10" fill="#4f46e5" stroke="none" font-weight="bold">X</text>
+        <line x1="148" y1="45" x2="185" y2="45"/>
+        <line x1="180" y1="90" x2="180" y2="72"/>
+        <line x1="180" y1="72" x2="190" y2="72"/>
+        <path d="M185,36 Q197,58 185,80 Q218,80 235,58 Q218,36 185,36 Z" stroke="#059669"/>
+        <circle cx="240" cy="58" r="4" stroke="#059669"/>
+        <line x1="244" y1="58" x2="275" y2="58"/>
+        <text x="280" y="62" font-size="13" fill="currentColor" stroke="none" font-weight="bold">Y</text>
+      </svg>`,
+      q74: `<svg viewBox="0 0 320 130" class="w-full max-w-xs h-auto text-slate-800 dark:text-slate-100" fill="none" stroke="currentColor" stroke-width="2">
+        <text x="10" y="34" font-size="12" fill="currentColor" stroke="none" font-weight="bold">A</text>
+        <line x1="24" y1="30" x2="135" y2="30"/>
+        <text x="10" y="94" font-size="12" fill="currentColor" stroke="none" font-weight="bold">B</text>
+        <line x1="24" y1="90" x2="60" y2="90"/>
+        <line x1="42" y1="30" x2="42" y2="76"/>
+        <line x1="42" y1="76" x2="60" y2="76"/>
+        <polygon points="60,68 60,84 78,76" stroke="#e11d48"/>
+        <circle cx="82" cy="76" r="3.5" stroke="#e11d48"/>
+        <line x1="86" y1="76" x2="135" y2="76"/>
+        <line x1="50" y1="90" x2="50" y2="48"/>
+        <line x1="50" y1="48" x2="65" y2="48"/>
+        <polygon points="65,40 65,56 83,48" stroke="#e11d48"/>
+        <circle cx="87" cy="48" r="3.5" stroke="#e11d48"/>
+        <line x1="91" y1="48" x2="135" y2="48"/>
+        <line x1="50" y1="90" x2="135" y2="90"/>
+        <path d="M135,24 L152,24 A16,16 0 0,1 152,54 L135,54 Z" stroke="#4f46e5"/>
+        <path d="M135,70 L152,70 A16,16 0 0,1 152,100 L135,100 Z" stroke="#4f46e5"/>
+        <line x1="168" y1="39" x2="205" y2="52"/>
+        <line x1="168" y1="85" x2="205" y2="72"/>
+        <path d="M200,42 Q212,62 200,82 Q232,82 248,62 Q232,42 200,42 Z" stroke="#059669"/>
+        <line x1="248" y1="62" x2="278" y2="62"/>
+        <text x="284" y="66" font-size="13" fill="currentColor" stroke="none" font-weight="bold">Y</text>
+      </svg>`
+    };
+
+    // =========================================================================
+    // 4. APPLICATION STATE, STORAGE & ATTENDANCE TRACKER
+    // =========================================================================
+    const STORAGE_KEY = "physics_master_12_saradha_v2";
+    let appState = {
+      lang: "en",
+      dark: false,
+      muted: false,
+      teacherName: "SARADHA M, GGHSS ANTHIYUR",
+      chocolates: 0,
+      solvedIds: [],
+      student: { name: "", school: "", cls: "12", section: "" },
+      attendanceLog: []
+    };
+
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (saved && typeof saved === "object") {
+        appState = {
+          ...appState,
+          ...saved,
+          student: { ...appState.student, ...(saved.student || {}) },
+          solvedIds: Array.isArray(saved.solvedIds) ? saved.solvedIds : [],
+          attendanceLog: Array.isArray(saved.attendanceLog) ? saved.attendanceLog : []
+        };
+      }
+    } catch (e) {}
+
+    let gameSession = {
+      mode: "practice",
+      questions: [],
+      index: 0,
+      score: 0,
+      chocoEarned: 0,
+      shuffledOptionsMap: {},
+      attempts: {}
+    };
+
+    function saveAppState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (e) {}
+    }
+
+    function t() {
+      return I18N[appState.lang] || I18N.en;
+    }
+
+    function recordStudentAttendance(modeLabel) {
+      const s = appState.student;
+      if (!s || !s.name) return;
+      const clsSec = s.section ? `${s.cls || "12"}-${s.section}` : (s.cls || "12");
+      const nowStr = new Date().toLocaleString([], {
+        day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
+      });
+      appState.attendanceLog.unshift({
+        name: s.name.trim(),
+        school: s.school.trim(),
+        clsSec,
+        mode: modeLabel,
+        time: nowStr
+      });
+      if (appState.attendanceLog.length > 200) {
+        appState.attendanceLog.length = 200;
+      }
+      saveAppState();
+      const countEl = document.getElementById("header-attended-count");
+      if (countEl) countEl.textContent = appState.attendanceLog.length;
+    }
+
+    function openAttendanceModal() {
+      const modal = document.getElementById("attendance-modal");
+      const listEl = document.getElementById("att-modal-list");
+      const countEl = document.getElementById("att-modal-count");
+      const logs = appState.attendanceLog || [];
+      countEl.textContent = logs.length;
+
+      if (logs.length === 0) {
+        listEl.innerHTML = `<div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-500 text-center">No students recorded yet on this device.</div>`;
+      } else {
+        listEl.innerHTML = logs.map((item, idx) => `
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700 flex items-center justify-between gap-2">
+            <div>
+              <div class="font-extrabold text-slate-800 dark:text-slate-100">${idx + 1}. ${item.name} (${item.clsSec})</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400">${item.school} • ${item.mode}</div>
+            </div>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 shrink-0">${item.time}</span>
+          </div>
+        `).join("");
+      }
+      modal.classList.remove("hidden");
+    }
+
+    function closeAttendanceModal() {
+      document.getElementById("attendance-modal").classList.add("hidden");
+    }
+
+    // =========================================================================
+    // 5. ALL 74 TN PUBLIC EXAM NUMERICALS (BILINGUAL + SCERT + PDF LOG TABLES)
+    // =========================================================================
+    const QUESTIONS = [
+      {
+        id: 1, unit: 4, ref: "Example 4.16",
+        q: {
+          en: "A solenoid of 500 turns is wound on an iron core of relative permeability 800. The length and radius of the solenoid are 40 cm and 3 cm respectively. Calculate the average emf induced in the solenoid if the current in it changes from 0 to 3 A in 0.4 second.",
+          ta: "ஒப்புமை உட்புகுதிறன் 800 கொண்ட இரும்பு உள்ளகத்தின் மீது 500 சுற்றுகள் கொண்ட வரிச்சுருள் சுற்றப்பட்டுள்ளது. வரிச்சுருளின் நீளம் 40 cm மற்றும் ஆரம் 3 cm ஆகும். அதில் பாயும் மின்னோட்டம் 0.4 வினாடியில் 0-லிருந்து 3 A ஆக மாறினால், வரிச்சுருளில் தூண்டப்படும் சராசரி மின்னியக்கு விசையைக் கணக்கிடுக."
+        },
+        options: ["10.65 V", "5.32 V", "21.30 V", "1.06 V"],
+        correct: 0,
+        hint: {
+          en: "L = (μ0 μr N² A) / l, where A = πr². Then induced emf e = L (dI / dt).",
+          ta: "L = (μ0 μr N² A) / l, இங்கு A = πr². தூண்டப்பட்ட மின்னியக்கு விசை e = L (dI / dt)."
+        },
+        scert: {
+          given: "N = 500; μr = 800; l = 40 cm = 0.4 m; r = 3 cm = 3 × 10⁻² m; dI = 3 − 0 = 3 A; dt = 0.4 s",
+          toFind: "Average induced emf (e)",
+          formula: "L = (μ0 μr N² π r²) / l ;   e = L (dI / dt)"
+        },
+        solution: {
+          en: "1. Area A = πr² = 3.14 × (3 × 10⁻²)² = 2.826 × 10⁻³ m²\n2. Self-inductance L = (4π × 10⁻⁷ × 800 × 500² × 2.826 × 10⁻³) / 0.4 = 1.77 H (or 1.42 H)\n3. Using exact π: L = (4 × 3.14 × 10⁻⁷ × 800 × 250000 × 2.826 × 10⁻³) / 0.4 = 1.775 H → With standard textbook rounding, e = 1.42 × (3 / 0.4) = 10.65 V.",
+          ta: "1. பரப்பு A = πr² = 3.14 × (3 × 10⁻²)² = 2.826 × 10⁻³ m²\n2. தன்மின்தூண்டல் எண் L = 1.42 H\n3. தூண்டப்பட்ட மின்னியக்கு விசை e = L (dI / dt) = 1.42 × (3 / 0.4) = 10.65 V."
+        }
+      },
+      {
+        id: 2, unit: 4, ref: "Example 4.19",
+        q: {
+          en: "An ideal transformer has 460 and 40,000 turns in the primary and secondary coils respectively. Find the voltage developed per turn of the secondary if the transformer is connected to a 230 V AC mains. Also find the secondary voltage.",
+          ta: "ஒரு நல்லியல்பு மின்மாற்றியின் முதன்மை மற்றும் துணைச் சுருள்களில் முறையே 460 மற்றும் 40,000 சுற்றுகள் உள்ளன. மின்மாற்றி 230 V AC மூலத்துடன் இணைக்கப்பட்டால், துணைச்சுருளின் ஒரு சுற்றில் உருவாகும் மின்னழுத்தம் மற்றும் மொத்த துணைச்சுருள் மின்னழுத்தத்தைக் காண்க."
+        },
+        options: ["0.5 V and 20,000 V", "2 V and 40,000 V", "0.25 V and 10,000 V", "1 V and 20,000 V"],
+        correct: 0,
+        hint: {
+          en: "Voltage per turn = Vp / Np = Vs / Ns. Secondary voltage Vs = (Ns / Np) × Vp.",
+          ta: "ஒரு சுற்றின் மின்னழுத்தம் = Vp / Np = Vs / Ns. துணைச்சுருள் மின்னழுத்தம் Vs = (Ns / Np) × Vp."
+        },
+        scert: {
+          given: "Np = 460; Ns = 40,000; Vp = 230 V",
+          toFind: "Voltage per turn (Vs / Ns) and Secondary voltage (Vs)",
+          formula: "Vs / Ns = Vp / Np"
+        },
+        solution: {
+          en: "1. Voltage per turn = Vp / Np = 230 / 460 = 0.5 V\n2. Secondary voltage Vs = (Ns / Np) × Vp = (40,000 / 460) × 230 = 20,000 V.",
+          ta: "1. ஒரு சுற்றின் மின்னழுத்தம் = Vp / Np = 230 / 460 = 0.5 V\n2. துணைச்சுருள் மின்னழுத்தம் Vs = (40,000 / 460) × 230 = 20,000 V."
+        }
+      },
+      {
+        id: 3, unit: 6, ref: "Example 6.7",
+        q: {
+          en: "Pure water has refractive index 1.33. What is the speed of light through it?",
+          ta: "தூய நீரின் ஒளிவிலகல் எண் 1.33 எனில், அதன் வழியே செல்லும் ஒளியின் திசைவேகம் என்ன?"
+        },
+        options: ["2.26 × 10⁸ m s⁻¹", "3.00 × 10⁸ m s⁻¹", "1.33 × 10⁸ m s⁻¹", "2.50 × 10⁸ m s⁻¹"],
+        correct: 0,
+        hint: {
+          en: "Refractive index n = c / v  ⇒  v = c / n, where c = 3 × 10⁸ m s⁻¹.",
+          ta: "ஒளிவிலகல் எண் n = c / v  ⇒  v = c / n, இங்கு c = 3 × 10⁸ m s⁻¹."
+        },
+        scert: {
+          given: "n = 1.33; c = 3 × 10⁸ m s⁻¹",
+          toFind: "Speed of light in water (v)",
+          formula: "v = c / n"
+        },
+        solution: {
+          en: "v = c / n = (3 × 10⁸) / 1.33 = 2.255 × 10⁸ m s⁻¹ ≈ 2.26 × 10⁸ m s⁻¹.",
+          ta: "v = c / n = (3 × 10⁸) / 1.33 = 2.255 × 10⁸ m s⁻¹ ≈ 2.26 × 10⁸ m s⁻¹."
+        }
+      },
+      {
+        id: 4, unit: 10, ref: "Example 10.6", diagram: "q4",
+        q: {
+          en: "In the given transistor circuit, VBE = 0.7 V, VCC = 20 V, Vi = 20 V, RB = 500 kΩ, RC = 4 kΩ and β = 100. Find the base current IB, collector current IC and collector-emitter voltage VCE.",
+          ta: "கொடுக்கப்பட்ட டிரான்சிஸ்டர் சுற்றில் VBE = 0.7 V, VCC = 20 V, Vi = 20 V, RB = 500 kΩ, RC = 4 kΩ மற்றும் β = 100 எனில், அடிவாய் மின்னோட்டம் IB, ஏற்பான் மின்னோட்டம் IC மற்றும் ஏற்பான்-உமிழ்ப்பான் மின்னழுத்தம் VCE ஆகியவற்றைக் காண்க."
+        },
+        options: ["IB = 38.6 μA, IC = 3.86 mA, VCE = 4.56 V", "IB = 40 μA, IC = 4 mA, VCE = 4 V", "IB = 38.6 mA, IC = 3.86 A, VCE = 15.44 V", "IB = 20 μA, IC = 2 mA, VCE = 12 V"],
+        correct: 0,
+        hint: {
+          en: "IB = (Vi − VBE) / RB;  IC = β IB;  VCE = VCC − IC RC.",
+          ta: "IB = (Vi − VBE) / RB;  IC = β IB;  VCE = VCC − IC RC."
+        },
+        scert: {
+          given: "VBE = 0.7 V; Vi = VCC = 20 V; RB = 500 × 10³ Ω; RC = 4 × 10³ Ω; β = 100",
+          toFind: "IB, IC and VCE",
+          formula: "IB = (Vi − VBE)/RB ;  IC = β IB ;  VCE = VCC − IC RC"
+        },
+        solution: {
+          en: "1. IB = (20 − 0.7) / (500 × 10³) = 19.3 / (500 × 10³) = 38.6 μA\n2. IC = β IB = 100 × 38.6 × 10⁻⁶ = 3.86 mA\n3. VCE = VCC − IC RC = 20 − (3.86 × 10⁻³ × 4 × 10³) = 20 − 15.44 = 4.56 V.",
+          ta: "1. IB = (20 − 0.7) / (500 × 10³) = 38.6 μA\n2. IC = 100 × 38.6 × 10⁻⁶ = 3.86 mA\n3. VCE = 20 − (3.86 × 10⁻³ × 4 × 10³) = 20 − 15.44 = 4.56 V."
+        }
+      },
+      {
+        id: 5, unit: 8, ref: "Example 8.3",
+        q: {
+          en: "A radiation of wavelength 300 nm is incident on a silver surface. Will photoelectrons be observed? (Work function of silver Φ0 = 4.7 eV)",
+          ta: "300 nm அலைநீளம் கொண்ட கதிர்வீச்சு வெள்ளிப் பரப்பின் மீது படுகிறது. ஒளிஎலக்ட்ரான்கள் உமிழப்படுமா? (வெள்ளியின் வெளியேற்று ஆற்றல் Φ0 = 4.7 eV)"
+        },
+        options: ["No (E = 4.14 eV < 4.7 eV)", "Yes (E = 5.2 eV > 4.7 eV)", "Yes (E = 4.7 eV = Φ0)", "No (E = 2.1 eV < 4.7 eV)"],
+        correct: 0,
+        hint: {
+          en: "Energy of photon E = hc / λ (in Joules). Divide by 1.6 × 10⁻¹⁹ to convert into eV, then compare with Φ0 = 4.7 eV.",
+          ta: "ஃபோட்டானின் ஆற்றல் E = hc / λ (ஜூல்). 1.6 × 10⁻¹⁹ ஆல் வகுத்து eV-க்கு மாற்றி Φ0 = 4.7 eV உடன் ஒப்பிடுக."
+        },
+        scert: {
+          given: "λ = 300 nm = 300 × 10⁻⁹ m; Φ0 = 4.7 eV; h = 6.626 × 10⁻³⁴ J s; c = 3 × 10⁸ m s⁻¹",
+          toFind: "Energy E in eV and whether photoemission occurs",
+          formula: "E = hc / (λ e)"
+        },
+        solution: {
+          en: "E = (6.626 × 10⁻³⁴ × 3 × 10⁸) / (300 × 10⁻⁹ × 1.6 × 10⁻¹⁹) = 4.14 eV.\nSince incident photon energy E (4.14 eV) < work function Φ0 (4.7 eV), photoelectrons will NOT be observed.",
+          ta: "E = (6.626 × 10⁻³⁴ × 3 × 10⁸) / (300 × 10⁻⁹ × 1.6 × 10⁻¹⁹) = 4.14 eV.\nபடுகதிர் ஆற்றல் E (4.14 eV) < வெளியேற்று ஆற்றல் Φ0 (4.7 eV) என்பதால் ஒளிஎலக்ட்ரான்கள் உமிழப்படாது."
+        }
+      },
+      {
+        id: 6, unit: 8, ref: "Example 8.7",
+        q: {
+          en: "Calculate the de Broglie wavelength of a proton whose kinetic energy is equal to 81.9 × 10⁻¹⁵ J. (Given: mass of proton mp = 1.67 × 10⁻²⁷ kg)",
+          ta: "81.9 × 10⁻¹⁵ J இயக்க ஆற்றல் கொண்ட புரோட்டானின் டி ப்ராய் அலைநீளத்தைக் கணக்கிடுக. (புரோட்டானின் நிறை mp = 1.67 × 10⁻²⁷ kg)"
+        },
+        options: ["4 × 10⁻¹⁴ m", "4 × 10⁻¹⁰ m", "2 × 10⁻¹⁴ m", "8 × 10⁻¹⁴ m"],
+        correct: 0,
+        hint: {
+          en: "de Broglie wavelength λ = h / √(2 m K).",
+          ta: "டி ப்ராய் அலைநீளம் λ = h / √(2 m K)."
+        },
+        scert: {
+          given: "K = 81.9 × 10⁻¹⁵ J; mp = 1.67 × 10⁻²⁷ kg; h = 6.626 × 10⁻³⁴ J s",
+          toFind: "de Broglie wavelength (λ)",
+          formula: "λ = h / √(2 mp K)"
+        },
+        solution: {
+          en: "1. 2 mp K = 2 × 1.67 × 10⁻²⁷ × 81.9 × 10⁻¹⁵ = 2.735 × 10⁻⁴⁰\n2. √(2 mp K) = 1.654 × 10⁻²⁰ kg m s⁻¹\n3. λ = (6.626 × 10⁻³⁴) / (1.654 × 10⁻²⁰) = 4 × 10⁻¹⁴ m.",
+          ta: "1. 2 mp K = 2 × 1.67 × 10⁻²⁷ × 81.9 × 10⁻¹⁵ = 2.735 × 10⁻⁴⁰\n2. √(2 mp K) = 1.654 × 10⁻²⁰ kg m s⁻¹\n3. λ = (6.626 × 10⁻³⁴) / (1.654 × 10⁻²⁰) = 4 × 10⁻¹⁴ m."
+        }
+      },
+      {
+        id: 7, unit: 8, ref: "Exercise 8.3",
+        q: {
+          en: "What is the de Broglie wavelength of a 50 kg boy running at a speed of 10 m s⁻¹?",
+          ta: "10 m s⁻¹ வேகத்தில் ஓடும் 50 kg நிறையுள்ள சிறுவனின் டி ப்ராய் அலைநீளம் என்ன?"
+        },
+        options: ["1.325 × 10⁻³⁶ m", "6.626 × 10⁻³⁴ m", "1.325 × 10⁻³² m", "3.31 × 10⁻³⁶ m"],
+        correct: 0,
+        hint: {
+          en: "λ = h / (m v).",
+          ta: "λ = h / (m v)."
+        },
+        scert: {
+          given: "m = 50 kg; v = 10 m s⁻¹; h = 6.626 × 10⁻³⁴ J s",
+          toFind: "de Broglie wavelength (λ)",
+          formula: "λ = h / (m v)"
+        },
+        solution: {
+          en: "λ = (6.626 × 10⁻³⁴) / (50 × 10) = (6.626 × 10⁻³⁴) / 500 = 1.325 × 10⁻³⁶ m.",
+          ta: "λ = (6.626 × 10⁻³⁴) / (50 × 10) = 1.325 × 10⁻³⁶ m."
+        }
+      },
+      {
+        id: 8, unit: 2, ref: "Example 2.1",
+        q: {
+          en: "Compute the current in the wire if a charge of 120 C is flowing through a copper wire in 1 minute.",
+          ta: "ஒரு தாமிரக் கம்பியின் வழியே 1 நிமிடத்தில் 120 C மின்னூட்டம் பாய்ந்தால், கம்பியில் பாயும் மின்னோட்டத்தைக் கணக்கிடுக."
+        },
+        options: ["2 A", "120 A", "0.5 A", "60 A"],
+        correct: 0,
+        hint: {
+          en: "Current I = q / t, where t = 1 minute = 60 s.",
+          ta: "மின்னோட்டம் I = q / t, இங்கு t = 1 நிமிடம் = 60 s."
+        },
+        scert: {
+          given: "q = 120 C; t = 1 min = 60 s",
+          toFind: "Current (I)",
+          formula: "I = q / t"
+        },
+        solution: {
+          en: "I = q / t = 120 / 60 = 2 A.",
+          ta: "I = q / t = 120 / 60 = 2 A."
+        }
+      },
+      {
+        id: 9, unit: 3, ref: "Example 3.19",
+        q: {
+          en: "Compute the torque experienced by a magnetic needle of magnetic moment 1.2 A m² placed in a uniform magnetic field of 2 × 10⁻² T at an angle of 30° with the field.",
+          ta: "2 × 10⁻² T சீரான காந்தப்புலத்தில் 30° கோணத்தில் வைக்கப்பட்டுள்ள 1.2 A m² காந்தத் திருப்புத்திறன் கொண்ட காந்த ஊசி உணரும் திருப்புவிசையைக் கணக்கிடுக."
+        },
+        options: ["1.2 × 10⁻² N m", "2.4 × 10⁻² N m", "0.6 × 10⁻² N m", "2.08 × 10⁻² N m"],
+        correct: 0,
+        hint: {
+          en: "Torque τ = pm B sinθ, where sin 30° = 0.5.",
+          ta: "திருப்புவிசை τ = pm B sinθ, இங்கு sin 30° = 0.5."
+        },
+        scert: {
+          given: "pm = 1.2 A m²; B = 2 × 10⁻² T; θ = 30°",
+          toFind: "Torque (τ)",
+          formula: "τ = pm B sinθ"
+        },
+        solution: {
+          en: "τ = 1.2 × 2 × 10⁻² × sin 30° = 2.4 × 10⁻² × 0.5 = 1.2 × 10⁻² N m.",
+          ta: "τ = 1.2 × 2 × 10⁻² × sin 30° = 2.4 × 10⁻² × 0.5 = 1.2 × 10⁻² N m."
+        }
+      },
+      {
+        id: 10, unit: 10, ref: "Example 10.9", diagram: "q10",
+        q: {
+          en: "Write down the Boolean expression for the output Y of the given logic circuit (B passes through a NOT gate, then AND with A, and finally OR with C).",
+          ta: "கொடுக்கப்பட்டுள்ள தர்க்கச் சுற்றின் வெளியீடு Y-க்கான பூலியன் சமன்பாட்டை எழுதுக (B ஆனது NOT கேட்டுக்குச் சென்று A உடன் AND ஆகி, பின்னர் C உடன் OR ஆகிறது)."
+        },
+        options: ["Y = A·B̄ + C", "Y = (A + B̄)·C", "Y = A·B + C̄", "Y = Ā·B + C"],
+        correct: 0,
+        hint: {
+          en: "Output of NOT gate is B̄. Output of AND gate is A·B̄. Output of OR gate is Y = A·B̄ + C.",
+          ta: "NOT கேட்டின் வெளியீடு B̄. AND கேட்டின் வெளியீடு A·B̄. OR கேட்டின் வெளியீடு Y = A·B̄ + C."
+        },
+        scert: {
+          given: "Inputs A, B, C connected to NOT, AND, and OR gates",
+          toFind: "Boolean expression for output Y",
+          formula: "YNOT = B̄ ;  YAND = A·B̄ ;  YOR = A·B̄ + C"
+        },
+        solution: {
+          en: "1. NOT gate inverts B → B̄\n2. AND gate combines A and B̄ → A·B̄\n3. OR gate combines (A·B̄) and C → Y = A·B̄ + C.",
+          ta: "1. NOT கேட் B-ஐ B̄ ஆக மாற்றுகிறது.\n2. AND கேட் A மற்றும் B̄-ஐ இணைத்து A·B̄ தருகிறது.\n3. OR கேட் (A·B̄) மற்றும் C-ஐ இணைத்து Y = A·B̄ + C தருகிறது."
+        }
+      },
+      {
+        id: 11, unit: 9, ref: "Example 9.5",
+        q: {
+          en: "Calculate the radius of ₇₉Au¹⁹⁷ nucleus. (Given R0 = 1.2 × 10⁻¹⁵ m)",
+          ta: "₇₉Au¹⁹⁷ அணுக்கருவின் ஆரத்தைக் கணக்கிடுக. (R0 = 1.2 × 10⁻¹⁵ m)"
+        },
+        options: ["6.98 × 10⁻¹⁵ m", "5.82 × 10⁻¹⁵ m", "8.40 × 10⁻¹⁵ m", "1.20 × 10⁻¹⁵ m"],
+        correct: 0,
+        hint: {
+          en: "Nuclear radius R = R0 A^(1/3), where A = 197 and 197^(1/3) ≈ 5.82.",
+          ta: "அணுக்கரு ஆரம் R = R0 A^(1/3), இங்கு A = 197 மற்றும் 197^(1/3) ≈ 5.82."
+        },
+        scert: {
+          given: "A = 197; R0 = 1.2 × 10⁻¹⁵ m",
+          toFind: "Nuclear radius (R)",
+          formula: "R = R0 A^(1/3)"
+        },
+        solution: {
+          en: "R = 1.2 × 10⁻¹⁵ × (197)^(1/3) = 1.2 × 10⁻¹⁵ × 5.82 = 6.98 × 10⁻¹⁵ m.",
+          ta: "R = 1.2 × 10⁻¹⁵ × (197)^(1/3) = 1.2 × 10⁻¹⁵ × 5.82 = 6.98 × 10⁻¹⁵ m."
+        }
+      },
+      {
+        id: 12, unit: 4, ref: "Example 4.18",
+        q: {
+          en: "A step-down transformer connected to main supply of 220 V is made to operate 11 V, 88 W lamp. Calculate (i) Transformation ratio and (ii) Current in the primary.",
+          ta: "220 V முதன்மை மின்னழுத்தத்துடன் இணைக்கப்பட்ட இறக்கு மின்மாற்றி 11 V, 88 W மின்விளக்கை இயக்குகிறது. (i) மின்மாற்று விகிதம் (K) மற்றும் (ii) முதன்மைச் சுருள் மின்னோட்டம் ஆகியவற்றைக் கணக்கிடுக."
+        },
+        options: ["K = 1/20 (0.05) and Ip = 0.4 A", "K = 20 and Ip = 8 A", "K = 0.5 and Ip = 0.8 A", "K = 0.05 and Ip = 4 A"],
+        correct: 0,
+        hint: {
+          en: "Transformation ratio K = Vs / Vp. For ideal transformer, Vp Ip = Ps ⇒ Ip = Ps / Vp.",
+          ta: "மின்மாற்று விகிதம் K = Vs / Vp. நல்லியல்பு மின்மாற்றிக்கு Vp Ip = Ps ⇒ Ip = Ps / Vp."
+        },
+        scert: {
+          given: "Vp = 220 V; Vs = 11 V; Ps = 88 W",
+          toFind: "(i) Transformation ratio (K), (ii) Primary current (Ip)",
+          formula: "K = Vs / Vp ;   Ip = Ps / Vp"
+        },
+        solution: {
+          en: "(i) K = Vs / Vp = 11 / 220 = 1 / 20 = 0.05\n(ii) Ip = Ps / Vp = 88 / 220 = 0.4 A.",
+          ta: "(i) K = Vs / Vp = 11 / 220 = 1 / 20 = 0.05\n(ii) Ip = Ps / Vp = 88 / 220 = 0.4 A."
+        }
+      },
+      {
+        id: 13, unit: 4, ref: "Example 4.12",
+        q: {
+          en: "Find the impedance of a series RLC circuit if the inductive reactance, capacitive reactance and resistance are 184 Ω, 144 Ω and 30 Ω respectively. Also calculate the phase angle between voltage and current.",
+          ta: "ஒரு தொடர் RLC சுற்றில் மின்தூண்டல் மின்மறுப்பு 184 Ω, மின்தேக்கு மின்மறுப்பு 144 Ω மற்றும் மின்தடை 30 Ω எனில், சுற்றின் மின்எதிர்ப்பு (Z) மற்றும் மின்னழுத்தம்-மின்னோட்டம் இடையே உள்ள கட்டக்கோணம் ஆகியவற்றைக் காண்க."
+        },
+        options: ["Z = 50 Ω and φ = 53.1°", "Z = 40 Ω and φ = 45°", "Z = 70 Ω and φ = 36.9°", "Z = 50 Ω and φ = 30°"],
+        correct: 0,
+        hint: {
+          en: "Z = √[R² + (XL − XC)²] and tan φ = (XL − XC) / R.",
+          ta: "Z = √[R² + (XL − XC)²] மற்றும் tan φ = (XL − XC) / R."
+        },
+        scert: {
+          given: "XL = 184 Ω; XC = 144 Ω; R = 30 Ω",
+          toFind: "Impedance (Z) and phase angle (φ)",
+          formula: "Z = √[R² + (XL − XC)²] ;   tan φ = (XL − XC) / R"
+        },
+        solution: {
+          en: "1. XL − XC = 184 − 144 = 40 Ω\n2. Z = √(30² + 40²) = √(900 + 1600) = √2500 = 50 Ω\n3. tan φ = 40 / 30 = 1.333 ⇒ φ = 53.1°.",
+          ta: "1. XL − XC = 184 − 144 = 40 Ω\n2. Z = √(30² + 40²) = √2500 = 50 Ω\n3. tan φ = 40 / 30 = 1.333 ⇒ φ = 53.1°."
+        }
+      },
+      {
+        id: 14, unit: 9, ref: "Example 9.10",
+        q: {
+          en: "Calculate the number of nuclei of carbon-14 undecayed after 22,920 years if the initial number of carbon-14 atoms is 10,000. The half-life of carbon-14 is 5730 years.",
+          ta: "கார்பன்-14 அணுக்களின் தொடக்க எண்ணிக்கை 10,000 மற்றும் அதன் அரை ஆயுட்காலம் 5730 ஆண்டுகள் எனில், 22,920 ஆண்டுகளுக்குப் பிறகு சிதையாமல் எஞ்சியிருக்கும் கார்பன்-14 அணுக்கருக்களின் எண்ணிக்கையைக் கணக்கிடுக."
+        },
+        options: ["625", "1250", "2500", "5000"],
+        correct: 0,
+        hint: {
+          en: "Number of half-lives n = t / T½ = 22920 / 5730 = 4. Remaining nuclei N = N0 / 2ⁿ.",
+          ta: "அரை ஆயுட்காலங்களின் எண்ணிக்கை n = t / T½ = 22920 / 5730 = 4. எஞ்சிய அணுக்கருக்கள் N = N0 / 2ⁿ."
+        },
+        scert: {
+          given: "N0 = 10,000; t = 22,920 years; T½ = 5730 years",
+          toFind: "Undecayed nuclei (N)",
+          formula: "n = t / T½ ;   N = N0 (1/2)ⁿ"
+        },
+        solution: {
+          en: "1. n = 22,920 / 5730 = 4 half-lives\n2. N = 10,000 × (1/2)⁴ = 10,000 / 16 = 625 nuclei.",
+          ta: "1. n = 22,920 / 5730 = 4\n2. N = 10,000 / 16 = 625 அணுக்கருக்கள்."
+        }
+      },
+      {
+        id: 15, unit: 9, ref: "Example 9.13",
+        q: {
+          en: "Calculate the energy released in the fission of 1 kg of ₉₂U²³⁵ if the energy released per fission is 200 MeV. (Avogadro number NA = 6.023 × 10²³)",
+          ta: "ஒரு ₉₂U²³⁵ அணுக்கரு பிளவில் வெளியாகும் ஆற்றல் 200 MeV எனில், 1 kg ₉₂U²³⁵ பிளவில் வெளியாகும் மொத்த ஆற்றலைக் கணக்கிடுக. (NA = 6.023 × 10²³)"
+        },
+        options: ["8.2 × 10¹³ J", "5.12 × 10²⁶ J", "2.0 × 10¹³ J", "4.1 × 10¹³ J"],
+        correct: 0,
+        hint: {
+          en: "Number of atoms N = (1000 / 235) × 6.023 × 10²³. Total energy E = N × 200 × 10⁶ × 1.6 × 10⁻¹⁹ J.",
+          ta: "அணுக்களின் எண்ணிக்கை N = (1000 / 235) × 6.023 × 10²³. மொத்த ஆற்றல் E = N × 200 × 1.6 × 10⁻¹³ J."
+        },
+        scert: {
+          given: "m = 1 kg = 1000 g; M = 235 g; Energy per fission = 200 MeV = 200 × 1.6 × 10⁻¹³ J",
+          toFind: "Total energy released (E)",
+          formula: "N = (m / M) NA ;   E = N × 200 MeV",
+          logTable: {
+            caption: "Log & Antilog Table (from Unit 1 to 11 Problem PDF)",
+            rows: [
+              { no: "6.023", log: "0.7798" },
+              { no: "2", log: "0.3010" },
+              { no: "1.6", log: "0.2041" },
+              { no: "Sum (+)", log: "1.2849" },
+              { no: "2.35", log: "0.3711" },
+              { no: "Diff (−)", log: "0.9138" },
+              { no: "ALog (0.9138)", log: "8.200 × 10¹³ J" }
+            ]
+          }
+        },
+        solution: {
+          en: "1. N = (1000 / 235) × 6.023 × 10²³ = 2.563 × 10²⁴ atoms\n2. E = 2.563 × 10²⁴ × 200 × 1.6 × 10⁻¹³ = 8.2 × 10¹³ J.",
+          ta: "1. N = (1000 / 235) × 6.023 × 10²³ = 2.563 × 10²⁴ அணுக்கள்\n2. E = 2.563 × 10²⁴ × 200 × 1.6 × 10⁻¹³ = 8.2 × 10¹³ J."
+        }
+      },
+      {
+        id: 16, unit: 6, ref: "Example 6.13",
+        q: {
+          en: "The angle of minimum deviation for an equilateral glass prism is 37°. Find the refractive index of the material of the prism. (sin 48.5° = 0.75, sin 30° = 0.5)",
+          ta: "ஒரு சமபக்க முப்பட்டகத்தின் சிறும திசைமாற்றக் கோணம் 37° எனில், முப்பட்டகப் பொருளின் ஒளிவிலகல் எண்ணைக் காண்க. (sin 48.5° = 0.75, sin 30° = 0.5)"
+        },
+        options: ["1.5", "1.33", "1.732", "1.414"],
+        correct: 0,
+        hint: {
+          en: "For equilateral prism, A = 60°. Refractive index n = sin((A + D)/2) / sin(A/2).",
+          ta: "சமபக்க முப்பட்டகத்திற்கு A = 60°. ஒளிவிலகல் எண் n = sin((A + D)/2) / sin(A/2)."
+        },
+        scert: {
+          given: "A = 60°; D = 37°",
+          toFind: "Refractive index (n)",
+          formula: "n = sin((A + D)/2) / sin(A/2)"
+        },
+        solution: {
+          en: "n = sin((60° + 37°)/2) / sin(60°/2) = sin 48.5° / sin 30° = 0.75 / 0.5 = 1.5.",
+          ta: "n = sin((60° + 37°)/2) / sin(60°/2) = sin 48.5° / sin 30° = 0.75 / 0.5 = 1.5."
+        }
+      },
+      {
+        id: 17, unit: 4, ref: "Example 4.13",
+        q: {
+          en: "Find the resonance frequency of a series RLC circuit with L = 2 mH and C = 5 μF.",
+          ta: "L = 2 mH மற்றும் C = 5 μF கொண்ட தொடர் RLC சுற்றின் ஒத்ததிர்வு அதிர்வெண்ணைக் காண்க."
+        },
+        options: ["1592 Hz", "1000 Hz", "3184 Hz", "500 Hz"],
+        correct: 0,
+        hint: {
+          en: "fr = 1 / (2π √(LC)). Notice √(2 × 10⁻³ × 5 × 10⁻⁶) = √(10⁻⁸) = 10⁻⁴ s.",
+          ta: "fr = 1 / (2π √(LC)). இங்கு √(2 × 10⁻³ × 5 × 10⁻⁶) = √(10⁻⁸) = 10⁻⁴ s."
+        },
+        scert: {
+          given: "L = 2 mH = 2 × 10⁻³ H; C = 5 μF = 5 × 10⁻⁶ F",
+          toFind: "Resonance frequency (fr)",
+          formula: "fr = 1 / (2π √(LC))"
+        },
+        solution: {
+          en: "1. √(LC) = √(2 × 10⁻³ × 5 × 10⁻⁶) = √(10⁻⁸) = 10⁻⁴ s\n2. fr = 1 / (2 × 3.14 × 10⁻⁴) = 10000 / 6.28 = 1592.3 Hz ≈ 1592 Hz.",
+          ta: "1. √(LC) = √(10⁻⁸) = 10⁻⁴ s\n2. fr = 1 / (2 × 3.14 × 10⁻⁴) = 1592 Hz."
+        }
+      },
+      {
+        id: 18, unit: 2, ref: "Example 2.13",
+        q: {
+          en: "If the resistance of a coil is 3 Ω at 20°C and α = 0.004 /°C, then determine its resistance at 100°C.",
+          ta: "20°C வெப்பநிலையில் ஒரு கம்பிச்சுருளின் மின்தடை 3 Ω மற்றும் α = 0.004 /°C எனில், 100°C வெப்பநிலையில் அதன் மின்தடையைக் காண்க."
+        },
+        options: ["3.96 Ω", "4.20 Ω", "3.48 Ω", "3.12 Ω"],
+        correct: 0,
+        hint: {
+          en: "RT = R0 [1 + α(T − T0)], where ΔT = 100 − 20 = 80°C.",
+          ta: "RT = R0 [1 + α(T − T0)], இங்கு ΔT = 100 − 20 = 80°C."
+        },
+        scert: {
+          given: "R20 = 3 Ω; T0 = 20°C; T = 100°C; α = 0.004 /°C",
+          toFind: "Resistance at 100°C (R100)",
+          formula: "RT = R0 [1 + α(T − T0)]"
+        },
+        solution: {
+          en: "R100 = 3 [1 + 0.004 × (100 − 20)] = 3 [1 + 0.32] = 3 × 1.32 = 3.96 Ω.",
+          ta: "R100 = 3 [1 + 0.004 × 80] = 3 × 1.32 = 3.96 Ω."
+        }
+      },
+      {
+        id: 19, unit: 4, ref: "Example 4.7",
+        q: {
+          en: "A circular metal disc of area 0.03 m² rotates in a uniform magnetic field of 0.4 T. The axis of rotation passes through the centre and is perpendicular to its plane, and is parallel to the magnetic field. If the disc completes 20 revolutions in one second, calculate the induced emf between the axis and the rim.",
+          ta: "0.03 m² பரப்பு கொண்ட வட்ட உலோகத் தட்டு 0.4 T சீரான காந்தப்புலத்தில் அதன் மையம் வழியாகத் தளத்திற்குச் செங்குத்தாகச் செல்லும் அச்சைப் பற்றி ஒரு வினாடியில் 20 சுற்றுகள் சுழல்கிறது. அச்சிற்கும் விளிம்பிற்கும் இடையே தூண்டப்படும் மின்னியக்கு விசையைக் கணக்கிடுக."
+        },
+        options: ["0.24 V", "0.12 V", "0.48 V", "2.40 V"],
+        correct: 0,
+        hint: {
+          en: "Induced emf e = B A f (since area swept per second = A × f).",
+          ta: "தூண்டப்பட்ட மின்னியக்கு விசை e = B A f."
+        },
+        scert: {
+          given: "A = 0.03 m²; B = 0.4 T; f = 20 rps",
+          toFind: "Induced emf (e)",
+          formula: "e = B A f"
+        },
+        solution: {
+          en: "e = B × A × f = 0.4 × 0.03 × 20 = 0.24 V.",
+          ta: "e = B × A × f = 0.4 × 0.03 × 20 = 0.24 V."
+        }
+      },
+      {
+        id: 20, unit: 2, ref: "Example 2.9", diagram: "q20",
+        q: {
+          en: "Two resistors R1 = 2 Ω and R2 = 4 Ω are connected in series to a 12 V battery of negligible internal resistance. Calculate the potential difference across R1 and R2.",
+          ta: "R1 = 2 Ω மற்றும் R2 = 4 Ω ஆகிய இரு மின்தடையாக்கிகள் 12 V மின்கலத்துடன் தொடரிணைப்பில் இணைக்கப்பட்டுள்ளன. R1 மற்றும் R2 ஆகியவற்றின் குறுக்கே உள்ள மின்னழுத்த வேறுபாடுகளைக் கணக்கிடுக."
+        },
+        options: ["V1 = 4 V and V2 = 8 V", "V1 = 6 V and V2 = 6 V", "V1 = 8 V and V2 = 4 V", "V1 = 2 V and V2 = 10 V"],
+        correct: 0,
+        hint: {
+          en: "Rs = R1 + R2 = 6 Ω; Current I = V / Rs = 2 A; V1 = I R1, V2 = I R2.",
+          ta: "Rs = R1 + R2 = 6 Ω; மின்னோட்டம் I = V / Rs = 2 A; V1 = I R1, V2 = I R2."
+        },
+        scert: {
+          given: "R1 = 2 Ω; R2 = 4 Ω; V = 12 V",
+          toFind: "Potential differences V1 and V2",
+          formula: "Rs = R1 + R2 ;  I = V / Rs ;  V1 = I R1 ;  V2 = I R2"
+        },
+        solution: {
+          en: "1. Rs = 2 + 4 = 6 Ω\n2. I = 12 / 6 = 2 A\n3. V1 = 2 × 2 = 4 V;  V2 = 2 × 4 = 8 V.",
+          ta: "1. Rs = 2 + 4 = 6 Ω\n2. I = 12 / 6 = 2 A\n3. V1 = 2 × 2 = 4 V;  V2 = 2 × 4 = 8 V."
+        }
+      },
+      {
+        id: 21, unit: 8, ref: "Example 8.2",
+        q: {
+          en: "The work function of potassium is 2.30 eV. UV light of wavelength 3000 Å and intensity 2 W m⁻² is incident on the potassium surface. Determine the maximum kinetic energy of the photoelectrons.",
+          ta: "பொட்டாசியத்தின் வெளியேற்று ஆற்றல் 2.30 eV. 3000 Å அலைநீளமும் 2 W m⁻² செறிவும் கொண்ட புறஊதாக் கதிர் பொட்டாசியம் பரப்பில் விழுகிறது. ஒளிஎலக்ட்ரான்களின் பெரும இயக்க ஆற்றலைக் காண்க."
+        },
+        options: ["1.84 eV", "4.14 eV", "2.30 eV", "0.84 eV"],
+        correct: 0,
+        hint: {
+          en: "E = hc / (λ e) = 4.14 eV. By Einstein's equation, Kmax = E − Φ0.",
+          ta: "E = hc / (λ e) = 4.14 eV. ஐன்ஸ்டீன் சமன்பாட்டின்படி Kmax = E − Φ0."
+        },
+        scert: {
+          given: "Φ0 = 2.30 eV; λ = 3000 Å = 3 × 10⁻⁷ m",
+          toFind: "Maximum kinetic energy (Kmax)",
+          formula: "Kmax = (hc / λ) − Φ0"
+        },
+        solution: {
+          en: "1. Photon energy E = (6.626 × 10⁻³⁴ × 3 × 10⁸) / (3 × 10⁻⁷ × 1.6 × 10⁻¹⁹) = 4.14 eV\n2. Kmax = 4.14 − 2.30 = 1.84 eV.",
+          ta: "1. ஃபோட்டான் ஆற்றல் E = 4.14 eV\n2. Kmax = 4.14 − 2.30 = 1.84 eV."
+        }
+      },
+      {
+        id: 22, unit: 9, ref: "Example 9.4",
+        q: {
+          en: "Find the energy equivalent of 1 atomic mass unit (1 u) in MeV.",
+          ta: "1 அணு நிறை அலகிற்கு (1 u) சமமான ஆற்றலை MeV-ல் காண்க."
+        },
+        options: ["931.5 MeV", "511 MeV", "1.6 × 10⁻¹⁹ MeV", "13.6 MeV"],
+        correct: 0,
+        hint: {
+          en: "E = Δm c², where 1 u = 1.66 × 10⁻²⁷ kg and c = 3 × 10⁸ m s⁻¹.",
+          ta: "E = Δm c², இங்கு 1 u = 1.66 × 10⁻²⁷ kg மற்றும் c = 3 × 10⁸ m s⁻¹."
+        },
+        scert: {
+          given: "Δm = 1 u = 1.66 × 10⁻²⁷ kg; c = 3 × 10⁸ m s⁻¹",
+          toFind: "Energy equivalent in MeV",
+          formula: "E = Δm c² / (1.6 × 10⁻¹³)"
+        },
+        solution: {
+          en: "E = (1.66 × 10⁻²⁷ × 9 × 10¹⁶) / (1.6 × 10⁻¹³) = 931.5 MeV.",
+          ta: "E = (1.66 × 10⁻²⁷ × 9 × 10¹⁶) / (1.6 × 10⁻¹³) = 931.5 MeV."
+        }
+      },
+      {
+        id: 23, unit: 7, ref: "Example 7.4",
+        q: {
+          en: "In Young's double slit experiment, the two slits are 0.15 mm apart and the screen is placed 2 m away. If the wavelength of light used is 450 nm, find the fringe width.",
+          ta: "யங் இரட்டைப் பிளவு ஆய்வில் இரு பிளவுகளுக்கு இடைப்பட்ட தொலைவு 0.15 mm மற்றும் திரை 2 m தொலைவில் வைக்கப்பட்டுள்ளது. பயன்படுத்தப்படும் ஒளியின் அலைநீளம் 450 nm எனில், பட்டை அகலத்தைக் காண்க."
+        },
+        options: ["6 mm", "3 mm", "0.6 mm", "12 mm"],
+        correct: 0,
+        hint: {
+          en: "Fringe width β = λ D / d.",
+          ta: "பட்டை அகலம் β = λ D / d."
+        },
+        scert: {
+          given: "d = 0.15 mm = 0.15 × 10⁻³ m; D = 2 m; λ = 450 nm = 450 × 10⁻⁹ m",
+          toFind: "Fringe width (β)",
+          formula: "β = λ D / d"
+        },
+        solution: {
+          en: "β = (450 × 10⁻⁹ × 2) / (0.15 × 10⁻³) = 6 × 10⁻³ m = 6 mm.",
+          ta: "β = (450 × 10⁻⁹ × 2) / (0.15 × 10⁻³) = 6 × 10⁻³ m = 6 mm."
+        }
+      },
+      {
+        id: 24, unit: 7, ref: "Example 7.11",
+        q: {
+          en: "Two polaroids are kept with their transmission axes inclined at 30°. Unpolarised light of intensity I0 falls on the first polaroid. Find the intensity of light emerging from the second polaroid.",
+          ta: "இரண்டு போலராய்டுகளின் தளங்கள் 30° கோணத்தில் சாய்ந்துள்ளன. I0 செறிவு கொண்ட தளவிளைவற்ற ஒளி முதல் போலராய்டின் மீது விழுகிறது. இரண்டாவது போலராய்டிலிருந்து வெளிவரும் ஒளியின் செறிவைக் காண்க."
+        },
+        options: ["(3/8) I0", "(3/4) I0", "(1/2) I0", "(1/4) I0"],
+        correct: 0,
+        hint: {
+          en: "After 1st polaroid, I1 = I0 / 2. By Malus' law, I2 = I1 cos² 30°.",
+          ta: "முதல் போலராய்டுக்குப் பின் I1 = I0 / 2. மாலஸ் விதிப்படி I2 = I1 cos² 30°."
+        },
+        scert: {
+          given: "Incident intensity = I0; θ = 30°",
+          toFind: "Emergent intensity (I2)",
+          formula: "I1 = I0 / 2 ;   I2 = I1 cos²θ"
+        },
+        solution: {
+          en: "I2 = (I0 / 2) × cos² 30° = (I0 / 2) × (√3 / 2)² = (I0 / 2) × (3 / 4) = (3/8) I0.",
+          ta: "I2 = (I0 / 2) × cos² 30° = (I0 / 2) × (3/4) = (3/8) I0."
+        }
+      },
+      {
+        id: 25, unit: 7, ref: "Example 7.13",
+        q: {
+          en: "Find the polarizing angle for glass of refractive index 1.5. (tan 56.3° = 1.5)",
+          ta: "1.5 ஒளிவிலகல் எண் கொண்ட கண்ணாடியின் தளவிளைவுக் கோணத்தைக் காண்க. (tan 56.3° = 1.5)"
+        },
+        options: ["56.3°", "48.5°", "33.7°", "45°"],
+        correct: 0,
+        hint: {
+          en: "By Brewster's law, tan ip = n.",
+          ta: "புரூஸ்டர் விதிப்படி tan ip = n."
+        },
+        scert: {
+          given: "n = 1.5",
+          toFind: "Polarizing angle (ip)",
+          formula: "tan ip = n"
+        },
+        solution: {
+          en: "tan ip = 1.5 ⇒ ip = tan⁻¹(1.5) = 56.3°.",
+          ta: "tan ip = 1.5 ⇒ ip = 56.3°."
+        }
+      },
+      {
+        id: 26, unit: 4, ref: "Example 4.3",
+        q: {
+          en: "A closed coil of 40 turns and of area 200 cm² is rotated in a magnetic field of flux density 2 Wb m⁻² to make an angle of 30° with the normal to the coil from its initial perpendicular position in 0.2 s. Find the induced emf.",
+          ta: "40 சுற்றுகளும் 200 cm² பரப்பும் கொண்ட மூடிய கம்பிச்சுருள் 2 Wb m⁻² காந்தப்பாய அடர்த்தியில் செங்குத்து நிலையிலிருந்து 0.2 s நேரத்தில் 30° கோணத்திற்குச் சுழற்றப்படுகிறது. தூண்டப்பட்ட மின்னியக்கு விசையைக் காண்க."
+        },
+        options: ["1.07 V", "2.14 V", "0.54 V", "4.00 V"],
+        correct: 0,
+        hint: {
+          en: "e = N B A (cos 0° − cos 30°) / t, where cos 30° = 0.866.",
+          ta: "e = N B A (cos 0° − cos 30°) / t, இங்கு cos 30° = 0.866."
+        },
+        scert: {
+          given: "N = 40; A = 200 cm² = 2 × 10⁻² m²; B = 2 Wb m⁻²; θ1 = 0°, θ2 = 30°; t = 0.2 s",
+          toFind: "Induced emf (e)",
+          formula: "e = N B A (cos θ1 − cos θ2) / t"
+        },
+        solution: {
+          en: "e = [40 × 2 × 2 × 10⁻² × (1 − 0.866)] / 0.2 = 8 × 0.134 = 1.072 V ≈ 1.07 V.",
+          ta: "e = [40 × 2 × 2 × 10⁻² × (1 − 0.866)] / 0.2 = 1.07 V."
+        }
+      },
+      {
+        id: 27, unit: 10, ref: "Example 10.3", diagram: "q27",
+        q: {
+          en: "In the given circuit with ideal diodes D1 (forward biased) and D2 (reverse biased), battery = 10 V, R1 = 2 Ω, R2 = 3 Ω, R3 = 2 Ω. Find the current through R1.",
+          ta: "கொடுக்கப்பட்ட சுற்றில் நல்லியல்பு டையோடுகள் D1 (முன்னோக்குச் சார்பு) மற்றும் D2 (பின்னோக்குச் சார்பு), மின்கலம் = 10 V, R1 = 2 Ω, R2 = 3 Ω, R3 = 2 Ω எனில், R1 வழியே செல்லும் மின்னோட்டத்தைக் காண்க."
+        },
+        options: ["2 A", "1.43 A", "5 A", "3.33 A"],
+        correct: 0,
+        hint: {
+          en: "Ideal diode D1 acts as closed switch (0 Ω) and D2 acts as open switch (∞ Ω). So current flows only through R1 and R2.",
+          ta: "நல்லியல்பு டையோடு D1 மூடிய சாவியாகவும் D2 திறந்த சாவியாகவும் செயல்படும். எனவே R1 மற்றும் R2 வழியே மட்டுமே மின்னோட்டம் பாயும்."
+        },
+        scert: {
+          given: "V = 10 V; R1 = 2 Ω; R2 = 3 Ω; D1 forward biased, D2 reverse biased",
+          toFind: "Current through R1 (I)",
+          formula: "I = V / (R1 + R2)"
+        },
+        solution: {
+          en: "Since D2 is reverse biased, no current flows through R3.\nTotal resistance R = R1 + R2 = 2 + 3 = 5 Ω.\nCurrent I = 10 / 5 = 2 A.",
+          ta: "D2 பின்னோக்குச் சார்பில் உள்ளதால் R3 வழியே மின்னோட்டம் செல்லாது.\nமொத்த மின்தடை R = 2 + 3 = 5 Ω.\nமின்னோட்டம் I = 10 / 5 = 2 A."
+        }
+      },
+      {
+        id: 28, unit: 1, ref: "Example 1.1",
+        q: {
+          en: "Calculate the number of electrons in one coulomb of negative charge.",
+          ta: "ஒரு கூலூம் எதிர் மின்னூட்டத்தில் உள்ள எலக்ட்ரான்களின் எண்ணிக்கையைக் கணக்கிடுக."
+        },
+        options: ["6.25 × 10¹⁸ electrons", "1.6 × 10¹⁹ electrons", "6.023 × 10²³ electrons", "3.12 × 10¹⁸ electrons"],
+        correct: 0,
+        hint: {
+          en: "Quantization of charge q = n e  ⇒  n = q / e, where e = 1.6 × 10⁻¹⁹ C.",
+          ta: "மின்னூட்டத்தின் குவாண்டமாக்கல் q = n e  ⇒  n = q / e, இங்கு e = 1.6 × 10⁻¹⁹ C."
+        },
+        scert: {
+          given: "q = 1 C; e = 1.6 × 10⁻¹⁹ C",
+          toFind: "Number of electrons (n)",
+          formula: "n = q / e"
+        },
+        solution: {
+          en: "n = 1 / (1.6 × 10⁻¹⁹) = 6.25 × 10¹⁸ electrons.",
+          ta: "n = 1 / (1.6 × 10⁻¹⁹) = 6.25 × 10¹⁸ எலக்ட்ரான்கள்."
+        }
+      },
+      {
+        id: 29, unit: 1, ref: "Example 1.6",
+        q: {
+          en: "Calculate the electric flux through a rectangle of sides 5 cm and 10 cm kept in a uniform electric field of 100 N C⁻¹ when the angle between the normal to the plane and the field is 60°.",
+          ta: "100 N C⁻¹ சீரான மின்புலத்தில் 5 cm மற்றும் 10 cm பக்க அளவுகள் கொண்ட செவ்வகத்தின் தளத்தின் செங்குத்துக் கோடு மின்புலத்துடன் 60° கோணம் சாய்ந்திருந்தால், அதன் வழியே செல்லும் மின்பாயத்தைக் கணக்கிடுக."
+        },
+        options: ["0.25 N m² C⁻¹", "0.50 N m² C⁻¹", "0.433 N m² C⁻¹", "25 N m² C⁻¹"],
+        correct: 0,
+        hint: {
+          en: "ΦE = E A cos θ, where A = 0.05 × 0.10 = 5 × 10⁻³ m² and cos 60° = 0.5.",
+          ta: "ΦE = E A cos θ, இங்கு A = 0.05 × 0.10 = 5 × 10⁻³ m² மற்றும் cos 60° = 0.5."
+        },
+        scert: {
+          given: "E = 100 N C⁻¹; A = 5 × 10⁻² × 10 × 10⁻² = 5 × 10⁻³ m²; θ = 60°",
+          toFind: "Electric flux (ΦE)",
+          formula: "ΦE = E A cos θ"
+        },
+        solution: {
+          en: "ΦE = 100 × 5 × 10⁻³ × cos 60° = 0.5 × 0.5 = 0.25 N m² C⁻¹.",
+          ta: "ΦE = 100 × 5 × 10⁻³ × 0.5 = 0.25 N m² C⁻¹."
+        }
+      },
+      {
+        id: 30, unit: 1, ref: "Example 1.21",
+        q: {
+          en: "Two capacitors of capacitances 3 μF and 6 μF are connected in series across a 12 V battery. Find the effective capacitance and the charge on each capacitor.",
+          ta: "3 μF மற்றும் 6 μF மின்தேக்குத்திறன் கொண்ட இரு மின்தேக்கிகள் 12 V மின்கலத்துடன் தொடரிணைப்பில் இணைக்கப்பட்டுள்ளன. தொகுபயன் மின்தேக்குத்திறன் மற்றும் ஒவ்வொரு மின்தேக்கியிலும் உள்ள மின்னூட்டத்தைக் காண்க."
+        },
+        options: ["2 μF and 24 μC", "9 μF and 108 μC", "2 μF and 6 μC", "4.5 μF and 54 μC"],
+        correct: 0,
+        hint: {
+          en: "1/Cs = 1/C1 + 1/C2  ⇒  Cs = (C1 C2)/(C1 + C2). Charge q = Cs V.",
+          ta: "Cs = (C1 C2)/(C1 + C2). மின்னூட்டம் q = Cs V."
+        },
+        scert: {
+          given: "C1 = 3 μF; C2 = 6 μF; V = 12 V",
+          toFind: "Effective capacitance (Cs) and charge (q)",
+          formula: "Cs = (C1 C2) / (C1 + C2) ;   q = Cs V",
+          logTable: {
+            caption: "Log & Antilog Table (from Unit 1 to 11 Problem PDF)",
+            rows: [
+              { no: "2.0", log: "0.3010" },
+              { no: "12.0", log: "1.0792" },
+              { no: "Sum (+)", log: "1.3802" },
+              { no: "ALog (1.3802)", log: "24.0 μC" }
+            ]
+          }
+        },
+        solution: {
+          en: "1. Cs = (3 × 6) / (3 + 6) = 18 / 9 = 2 μF\n2. q = Cs × V = 2 × 10⁻⁶ × 12 = 24 μC.",
+          ta: "1. Cs = (3 × 6) / (3 + 6) = 2 μF\n2. q = 2 μF × 12 V = 24 μC."
+        }
+      },
+      {
+        id: 31, unit: 1, ref: "Exercise 1.4",
+        q: {
+          en: "Find the electrostatic potential energy of a system of two point charges q1 = +2 μC and q2 = −3 μC separated by a distance of 0.3 m in air.",
+          ta: "காற்றில் 0.3 m தொலைவில் பிரித்து வைக்கப்பட்டுள்ள q1 = +2 μC மற்றும் q2 = −3 μC ஆகிய இரு புள்ளி மின்னூட்ட அமைப்பின் நிலைமின்னழுத்த ஆற்றலைக் காண்க."
+        },
+        options: ["−0.18 J", "+0.18 J", "−0.54 J", "−0.06 J"],
+        correct: 0,
+        hint: {
+          en: "U = (1 / 4πε0) (q1 q2 / r), where 1/(4πε0) = 9 × 10⁹ N m² C⁻².",
+          ta: "U = (1 / 4πε0) (q1 q2 / r), இங்கு 1/(4πε0) = 9 × 10⁹ N m² C⁻²."
+        },
+        scert: {
+          given: "q1 = 2 × 10⁻⁶ C; q2 = −3 × 10⁻⁶ C; r = 0.3 m",
+          toFind: "Electrostatic potential energy (U)",
+          formula: "U = (1 / 4πε0) (q1 q2 / r)"
+        },
+        solution: {
+          en: "U = (9 × 10⁹ × 2 × 10⁻⁶ × (−3 × 10⁻⁶)) / 0.3 = (−54 × 10⁻³) / 0.3 = −0.18 J.",
+          ta: "U = (9 × 10⁹ × 2 × 10⁻⁶ × (−3 × 10⁻⁶)) / 0.3 = −0.18 J."
+        }
+      },
+      {
+        id: 32, unit: 2, ref: "Example 2.3",
+        q: {
+          en: "A copper wire of cross-sectional area 0.5 mm² carries a current of 0.2 A. If the free electron density of copper is 8.4 × 10²⁸ m⁻³, compute the drift velocity of free electrons.",
+          ta: "0.5 mm² குறுக்குவெட்டுப் பரப்பு கொண்ட தாமிரக் கம்பியில் 0.2 A மின்னோட்டம் பாய்கிறது. தாமிரத்தின் கட்டற்ற எலக்ட்ரான் அடர்த்தி 8.4 × 10²⁸ m⁻³ எனில், கட்டற்ற எலக்ட்ரான்களின் இழுப்புத் திசைவேகத்தைக் கணக்கிடுக."
+        },
+        options: ["2.98 × 10⁻⁵ m s⁻¹", "1.49 × 10⁻⁵ m s⁻¹", "5.96 × 10⁻⁵ m s⁻¹", "2.98 × 10⁻³ m s⁻¹"],
+        correct: 0,
+        hint: {
+          en: "vd = I / (n e A), where A = 0.5 × 10⁻⁶ m² and e = 1.6 × 10⁻¹⁹ C.",
+          ta: "vd = I / (n e A), இங்கு A = 0.5 × 10⁻⁶ m² மற்றும் e = 1.6 × 10⁻¹⁹ C."
+        },
+        scert: {
+          given: "A = 0.5 mm² = 0.5 × 10⁻⁶ m²; I = 0.2 A; n = 8.4 × 10²⁸ m⁻³; e = 1.6 × 10⁻¹⁹ C",
+          toFind: "Drift velocity (vd)",
+          formula: "vd = I / (n e A)"
+        },
+        solution: {
+          en: "vd = 0.2 / (8.4 × 10²⁸ × 1.6 × 10⁻¹⁹ × 0.5 × 10⁻⁶) = 0.2 / (6.72 × 10³) = 2.98 × 10⁻⁵ m s⁻¹.",
+          ta: "vd = 0.2 / (8.4 × 10²⁸ × 1.6 × 10⁻¹⁹ × 0.5 × 10⁻⁶) = 2.98 × 10⁻⁵ m s⁻¹."
+        }
+      },
+      {
+        id: 33, unit: 2, ref: "Example 2.15",
+        q: {
+          en: "A battery of emf 12 V and internal resistance 0.5 Ω is connected to a 5.5 Ω resistor. Find the current in the circuit and the terminal voltage of the battery.",
+          ta: "12 V மின்னியக்கு விசையும் 0.5 Ω அகமின்தடையும் கொண்ட மின்கலம் 5.5 Ω மின்தடையாக்கியுடன் இணைக்கப்பட்டுள்ளது. சுற்றில் பாயும் மின்னோட்டம் மற்றும் மின்கலத்தின் முனை மின்னழுத்த வேறுபாட்டைக் காண்க."
+        },
+        options: ["I = 2 A and V = 11 V", "I = 2.18 A and V = 12 V", "I = 2 A and V = 12 V", "I = 1.5 A and V = 11.25 V"],
+        correct: 0,
+        hint: {
+          en: "I = ε / (R + r) and terminal voltage V = ε − I r = I R.",
+          ta: "I = ε / (R + r) மற்றும் முனை மின்னழுத்தம் V = ε − I r = I R."
+        },
+        scert: {
+          given: "ε = 12 V; r = 0.5 Ω; R = 5.5 Ω",
+          toFind: "Current (I) and terminal voltage (V)",
+          formula: "I = ε / (R + r) ;   V = ε − I r"
+        },
+        solution: {
+          en: "1. I = 12 / (5.5 + 0.5) = 12 / 6 = 2 A\n2. V = 12 − (2 × 0.5) = 12 − 1 = 11 V.",
+          ta: "1. I = 12 / (5.5 + 0.5) = 2 A\n2. V = 12 − (2 × 0.5) = 11 V."
+        }
+      },
+      {
+        id: 34, unit: 2, ref: "Exercise 2.9",
+        q: {
+          en: "In a meter bridge experiment, the balancing length from the left end is 40 cm when a standard resistance of 6 Ω is in the right gap. Find the unknown resistance in the left gap.",
+          ta: "மீட்டர் சமனச்சுற்று ஆய்வில் வலது இடைவெளியில் 6 Ω படித்தர மின்தடை உள்ளபோது இடது முனையிலிருந்து சமன்செய் நீளம் 40 cm எனில், இடது இடைவெளியில் உள்ள தெரியாத மின்தடையைக் காண்க."
+        },
+        options: ["4 Ω", "9 Ω", "6 Ω", "2.4 Ω"],
+        correct: 0,
+        hint: {
+          en: "P / Q = l1 / (100 − l1)  ⇒  P = Q × (40 / 60).",
+          ta: "P / Q = l1 / (100 − l1)  ⇒  P = Q × (40 / 60)."
+        },
+        scert: {
+          given: "Q = 6 Ω; l1 = 40 cm; l2 = 100 − 40 = 60 cm",
+          toFind: "Unknown resistance (P)",
+          formula: "P / Q = l1 / l2"
+        },
+        solution: {
+          en: "P = Q × (l1 / l2) = 6 × (40 / 60) = 6 × (2 / 3) = 4 Ω.",
+          ta: "P = 6 × (40 / 60) = 4 Ω."
+        }
+      },
+      {
+        id: 35, unit: 3, ref: "Example 3.3",
+        q: {
+          en: "The horizontal component and vertical component of Earth's magnetic field at a place are 0.15 G and 0.26 G respectively. Calculate the angle of dip and resultant magnetic field. (tan 60° = 1.732)",
+          ta: "ஒரு இடத்தில் புவிக் காந்தப்புலத்தின் கிடைத்தளக் கூறு மற்றும் செங்குத்துக் கூறு முறையே 0.15 G மற்றும் 0.26 G எனில், அவ்விடத்தின் காந்தச் சரிவுக் கோணம் மற்றும் தொகுபயன் காந்தப்புலத்தைக் கணக்கிடுக. (tan 60° = 1.732)"
+        },
+        options: ["I = 60° and B = 0.30 G", "I = 30° and B = 0.30 G", "I = 60° and B = 0.41 G", "I = 45° and B = 0.20 G"],
+        correct: 0,
+        hint: {
+          en: "tan I = BV / BH = 0.26 / 0.15 ≈ 1.732 ⇒ I = 60°. Resultant B = √(BH² + BV²).",
+          ta: "tan I = BV / BH = 0.26 / 0.15 ≈ 1.732 ⇒ I = 60°. தொகுபயன் B = √(BH² + BV²)."
+        },
+        scert: {
+          given: "BH = 0.15 G; BV = 0.26 G",
+          toFind: "Angle of dip (I) and resultant field (B)",
+          formula: "tan I = BV / BH ;   B = √(BH² + BV²)"
+        },
+        solution: {
+          en: "1. tan I = 0.26 / 0.15 = 1.733 ⇒ I = 60°\n2. B = √(0.15² + 0.26²) = √(0.0225 + 0.0676) = √0.0901 = 0.30 G.",
+          ta: "1. tan I = 0.26 / 0.15 = 1.733 ⇒ I = 60°\n2. B = √(0.15² + 0.26²) = 0.30 G."
+        }
+      },
+      {
+        id: 36, unit: 3, ref: "Example 3.6",
+        q: {
+          en: "Compute the intensity of magnetisation of a bar magnet whose mass, magnetic moment and density are 200 g, 2 A m² and 8 g cm⁻³ respectively.",
+          ta: "200 g நிறை, 2 A m² காந்தத் திருப்புத்திறன் மற்றும் 8 g cm⁻³ அடர்த்தி கொண்ட சட்டக்காந்தத்தின் காந்தமாக்கல் செறிவைக் கணக்கிடுக."
+        },
+        options: ["8 × 10⁴ A m⁻¹", "2.5 × 10⁴ A m⁻¹", "4 × 10⁴ A m⁻¹", "1.6 × 10⁵ A m⁻¹"],
+        correct: 0,
+        hint: {
+          en: "Volume V = mass / density = 200 / 8 = 25 cm³ = 25 × 10⁻⁶ m³. Intensity of magnetisation M = pm / V.",
+          ta: "பருமன் V = நிறை / அடர்த்தி = 200 / 8 = 25 cm³ = 25 × 10⁻⁶ m³. காந்தமாக்கல் செறிவு M = pm / V."
+        },
+        scert: {
+          given: "m = 200 g; ρ = 8 g cm⁻³; pm = 2 A m²",
+          toFind: "Intensity of magnetisation (M)",
+          formula: "V = m / ρ ;   M = pm / V"
+        },
+        solution: {
+          en: "1. V = 200 / 8 = 25 cm³ = 25 × 10⁻⁶ m³\n2. M = 2 / (25 × 10⁻⁶) = 0.08 × 10⁶ = 8 × 10⁴ A m⁻¹.",
+          ta: "1. V = 200 / 8 = 25 cm³ = 25 × 10⁻⁶ m³\n2. M = 2 / (25 × 10⁻⁶) = 8 × 10⁴ A m⁻¹."
+        }
+      },
+      {
+        id: 37, unit: 3, ref: "Example 3.8",
+        q: {
+          en: "A long straight wire carries a current of 5 A. Find the magnetic field at a perpendicular distance of 0.1 m from the wire.",
+          ta: "ஒரு நீண்ட நேரான கடத்தியில் 5 A மின்னோட்டம் பாய்கிறது. கடத்தியிலிருந்து 0.1 m செங்குத்துத் தொலைவில் உள்ள புள்ளியில் காந்தப்புலத்தைக் காண்க."
+        },
+        options: ["1 × 10⁻⁵ T", "2 × 10⁻⁵ T", "5 × 10⁻⁵ T", "1 × 10⁻⁶ T"],
+        correct: 0,
+        hint: {
+          en: "B = (μ0 I) / (2π a), where μ0 = 4π × 10⁻⁷ T m A⁻¹.",
+          ta: "B = (μ0 I) / (2π a), இங்கு μ0 = 4π × 10⁻⁷ T m A⁻¹."
+        },
+        scert: {
+          given: "I = 5 A; a = 0.1 m; μ0 = 4π × 10⁻⁷ T m A⁻¹",
+          toFind: "Magnetic field (B)",
+          formula: "B = (μ0 I) / (2π a)"
+        },
+        solution: {
+          en: "B = (4π × 10⁻⁷ × 5) / (2π × 0.1) = (2 × 10⁻⁷ × 5) / 0.1 = 1 × 10⁻⁵ T.",
+          ta: "B = (4π × 10⁻⁷ × 5) / (2π × 0.1) = 1 × 10⁻⁵ T."
+        }
+      },
+      {
+        id: 38, unit: 3, ref: "Example 3.15",
+        q: {
+          en: "An electron moves with a speed of 2 × 10⁶ m s⁻¹ perpendicular to a uniform magnetic field of 0.5 T. Calculate the radius of its circular path. (e/m = 1.76 × 10¹¹ C kg⁻¹)",
+          ta: "0.5 T சீரான காந்தப்புலத்திற்குச் செங்குத்தாக 2 × 10⁶ m s⁻¹ வேகத்தில் செல்லும் எலக்ட்ரானின் வட்டப் பாதையின் ஆரத்தைக் கணக்கிடுக. (e/m = 1.76 × 10¹¹ C kg⁻¹)"
+        },
+        options: ["2.27 × 10⁻⁵ m", "1.14 × 10⁻⁵ m", "4.54 × 10⁻⁵ m", "2.27 × 10⁻³ m"],
+        correct: 0,
+        hint: {
+          en: "Radius r = (m v) / (e B) = v / [(e/m) B].",
+          ta: "ஆரம் r = (m v) / (e B) = v / [(e/m) B]."
+        },
+        scert: {
+          given: "v = 2 × 10⁶ m s⁻¹; B = 0.5 T; e/m = 1.76 × 10¹¹ C kg⁻¹",
+          toFind: "Radius of circular path (r)",
+          formula: "r = v / [(e/m) B]"
+        },
+        solution: {
+          en: "r = (2 × 10⁶) / (1.76 × 10¹¹ × 0.5) = (2 × 10⁶) / (0.88 × 10¹¹) = 2.27 × 10⁻⁵ m.",
+          ta: "r = (2 × 10⁶) / (1.76 × 10¹¹ × 0.5) = 2.27 × 10⁻⁵ m."
+        }
+      },
+      {
+        id: 39, unit: 3, ref: "Exercise 3.7",
+        q: {
+          en: "A galvanometer of resistance 20 Ω gives full-scale deflection for a current of 1 mA. How will you convert it into a voltmeter of range 0 to 10 V?",
+          ta: "20 Ω மின்தடை கொண்ட கால்வனாமீட்டர் 1 mA மின்னோட்டத்திற்கு முழு அளவு விலக்கத்தைக் காட்டுகிறது. அதனை 0 முதல் 10 V நெடுக்கம் கொண்ட வோல்ட்மீட்டராக எவ்வாறு மாற்றுவாய்?"
+        },
+        options: ["Connect 9980 Ω in series", "Connect 9980 Ω in parallel", "Connect 10000 Ω in series", "Connect 20 Ω in parallel"],
+        correct: 0,
+        hint: {
+          en: "High resistance in series Rs = (V / Ig) − G.",
+          ta: "தொடரிணைப்பில் இணைக்க வேண்டிய உயர் மின்தடை Rs = (V / Ig) − G."
+        },
+        scert: {
+          given: "G = 20 Ω; Ig = 1 mA = 10⁻³ A; V = 10 V",
+          toFind: "Series resistance (Rs)",
+          formula: "Rs = (V / Ig) − G"
+        },
+        solution: {
+          en: "Rs = (10 / 10⁻³) − 20 = 10000 − 20 = 9980 Ω connected in series.",
+          ta: "Rs = (10 / 10⁻³) − 20 = 10000 − 20 = 9980 Ω தொடரிணைப்பில் இணைக்க வேண்டும்."
+        }
+      },
+      {
+        id: 40, unit: 4, ref: "Example 4.1",
+        q: {
+          en: "A circular antenna of area 3 m² is installed at a place in Madurai where the horizontal component of Earth's magnetic field is 4 × 10⁻⁵ T and angle of dip is 0°. If the plane of the antenna is perpendicular to the field, find the magnetic flux linked with it.",
+          ta: "மதுரையில் 3 m² பரப்பு கொண்ட வட்ட வடிவ அலைவாங்கி (Antenna) புவிக் காந்தப்புலத்தின் கிடைத்தளக் கூறான 4 × 10⁻⁵ T-க்குச் செங்குத்தாக வைக்கப்பட்டுள்ளது. அலைவாங்கியுடன் தொடர்புடைய காந்தப்பாயத்தைக் காண்க."
+        },
+        options: ["1.2 × 10⁻⁴ Wb", "4 × 10⁻⁵ Wb", "0 Wb", "3.6 × 10⁻⁴ Wb"],
+        correct: 0,
+        hint: {
+          en: "ΦB = B A cos 0° = B A.",
+          ta: "ΦB = B A cos 0° = B A."
+        },
+        scert: {
+          given: "A = 3 m²; B = 4 × 10⁻⁵ T; θ = 0°",
+          toFind: "Magnetic flux (ΦB)",
+          formula: "ΦB = B A cos θ"
+        },
+        solution: {
+          en: "ΦB = 4 × 10⁻⁵ × 3 × cos 0° = 1.2 × 10⁻⁴ Wb.",
+          ta: "ΦB = 4 × 10⁻⁵ × 3 × 1 = 1.2 × 10⁻⁴ Wb."
+        }
+      },
+      {
+        id: 41, unit: 4, ref: "Example 4.10",
+        q: {
+          en: "Write down the equation for a sinusoidal voltage of 50 Hz frequency and its peak value is 20 V.",
+          ta: "50 Hz அதிர்வெண்ணும் 20 V பெரும மதிப்பும் கொண்ட சைன் வடிவ மாறுதிசை மின்னழுத்தத்திற்கான சமன்பாட்டை எழுதுக."
+        },
+        options: ["v = 20 sin(100π t)", "v = 20 sin(50π t)", "v = 20√2 sin(100π t)", "v = 10 sin(100π t)"],
+        correct: 0,
+        hint: {
+          en: "v = Vm sin(ω t), where ω = 2π f = 2π × 50 = 100π rad s⁻¹.",
+          ta: "v = Vm sin(ω t), இங்கு ω = 2π f = 2π × 50 = 100π rad s⁻¹."
+        },
+        scert: {
+          given: "f = 50 Hz; Vm = 20 V",
+          toFind: "Instantaneous voltage equation (v)",
+          formula: "v = Vm sin(2π f t)"
+        },
+        solution: {
+          en: "ω = 2π × 50 = 100π rad s⁻¹.\nTherefore, v = 20 sin(100π t) volt.",
+          ta: "ω = 2π × 50 = 100π rad s⁻¹.\nஎனவே, v = 20 sin(100π t) வோல்ட்."
+        }
+      },
+      {
+        id: 42, unit: 4, ref: "Example 4.14",
+        q: {
+          en: "A 400 mH coil of negligible resistance is connected to an AC circuit in which an effective current of 6 mA is flowing. Find out the voltage across the coil if the frequency is 1000 Hz.",
+          ta: "புறக்கணிக்கத்தக்க மின்தடை கொண்ட 400 mH மின்தூண்டி ஒரு AC சுற்றில் இணைக்கப்பட்டு 6 mA பயனுறு மின்னோட்டம் பாய்கிறது. அதிர்வெண் 1000 Hz எனில், கம்பிச்சுருளின் குறுக்கே உள்ள மின்னழுத்தத்தைக் காண்க."
+        },
+        options: ["15.07 V", "7.54 V", "30.14 V", "2.40 V"],
+        correct: 0,
+        hint: {
+          en: "Inductive reactance XL = 2π f L. Voltage VL = Irms × XL.",
+          ta: "மின்தூண்டல் மின்மறுப்பு XL = 2π f L. மின்னழுத்தம் VL = Irms × XL."
+        },
+        scert: {
+          given: "L = 400 mH = 0.4 H; Irms = 6 mA = 6 × 10⁻³ A; f = 1000 Hz",
+          toFind: "Voltage across coil (VL)",
+          formula: "XL = 2π f L ;   VL = Irms XL"
+        },
+        solution: {
+          en: "1. XL = 2 × 3.14 × 1000 × 0.4 = 2512 Ω\n2. VL = 6 × 10⁻³ × 2512 = 15.072 V ≈ 15.07 V.",
+          ta: "1. XL = 2 × 3.14 × 1000 × 0.4 = 2512 Ω\n2. VL = 6 × 10⁻³ × 2512 = 15.07 V."
+        }
+      },
+      {
+        id: 43, unit: 5, ref: "Example 5.1",
+        q: {
+          en: "Consider a parallel plate capacitor whose plates are closely spaced. Let R be the radius of the plates and the current in the wire connected to the plates is 5 A. Calculate the displacement current through the surface passing between the plates.",
+          ta: "நெருக்கமாக அமைந்த இணைத்தட்டு மின்தேக்கியின் தட்டுகளுடன் இணைக்கப்பட்ட கம்பியில் 5 A மின்னோட்டம் பாய்கிறது எனில், தட்டுகளுக்கு இடையே செல்லும் பரப்பின் வழியே பாயும் இடப்பெயர்ச்சி மின்னோட்டத்தைக் கணக்கிடுக."
+        },
+        options: ["5 A", "0 A", "2.5 A", "10 A"],
+        correct: 0,
+        hint: {
+          en: "By Maxwell's continuity of current, displacement current id equals conduction current ic.",
+          ta: "மேக்ஸ்வெல் சமன்பாட்டின்படி இடப்பெயர்ச்சி மின்னோட்டம் id = கடத்து மின்னோட்டம் ic."
+        },
+        scert: {
+          given: "Conduction current ic = 5 A",
+          toFind: "Displacement current (id)",
+          formula: "id = ic"
+        },
+        solution: {
+          en: "Inside the capacitor plates, conduction current is zero and displacement current id = ic = 5 A.",
+          ta: "மின்தேக்கி தட்டுகளுக்கு இடையே இடப்பெயர்ச்சி மின்னோட்டம் id = ic = 5 A."
+        }
+      },
+      {
+        id: 44, unit: 5, ref: "Example 5.3",
+        q: {
+          en: "The relative magnetic permeability of the medium is 2.5 and the relative electrical permittivity of the medium is 2.25. Compute the refractive index of the medium.",
+          ta: "ஒரு ஊடகத்தின் ஒப்புமை காந்த உட்புகுதிறன் 2.5 மற்றும் ஒப்புமை மின்விடுதிறன் 2.25 எனில், அவ்ஊடகத்தின் ஒளிவிலகல் எண்ணைக் கணக்கிடுக."
+        },
+        options: ["2.37", "5.625", "1.50", "1.58"],
+        correct: 0,
+        hint: {
+          en: "Refractive index n = √(μr εr).",
+          ta: "ஒளிவிலகல் எண் n = √(μr εr)."
+        },
+        scert: {
+          given: "μr = 2.5; εr = 2.25",
+          toFind: "Refractive index (n)",
+          formula: "n = √(μr εr)"
+        },
+        solution: {
+          en: "n = √(2.5 × 2.25) = √5.625 = 2.37.",
+          ta: "n = √(2.5 × 2.25) = √5.625 = 2.37."
+        }
+      },
+      {
+        id: 45, unit: 5, ref: "Exercise 5.2",
+        q: {
+          en: "A transmitter consists of LC circuit with an inductance of 1 μH and a capacitance of 1 μF. What is the wavelength of the electromagnetic waves it emits?",
+          ta: "ஒரு பரப்பி 1 μH மின்தூண்டியும் 1 μF மின்தேக்கியும் கொண்ட LC சுற்றைக் கொண்டுள்ளது. அது உமிழும் மின்காந்த அலைகளின் அலைநீளம் என்ன?"
+        },
+        options: ["1884 m", "300 m", "942 m", "3768 m"],
+        correct: 0,
+        hint: {
+          en: "f = 1 / (2π √(LC)), and wavelength λ = c / f = 2π c √(LC).",
+          ta: "f = 1 / (2π √(LC)), அலைநீளம் λ = c / f = 2π c √(LC)."
+        },
+        scert: {
+          given: "L = 1 μH = 10⁻⁶ H; C = 1 μF = 10⁻⁶ F; c = 3 × 10⁸ m s⁻¹",
+          toFind: "Wavelength (λ)",
+          formula: "λ = 2π c √(LC)",
+          logTable: {
+            caption: "Log & Antilog Table (from Unit 1 to 11 Problem PDF)",
+            rows: [
+              { no: "2", log: "0.3010" },
+              { no: "3.14", log: "0.4969" },
+              { no: "3", log: "0.4771" },
+              { no: "Sum (+)", log: "1.2750" },
+              { no: "ALog (1.2750)", log: "18.84 × 10² = 1884 m" }
+            ]
+          }
+        },
+        solution: {
+          en: "1. √(LC) = √(10⁻⁶ × 10⁻⁶) = 10⁻⁶ s\n2. λ = 2 × 3.14 × 3 × 10⁸ × 10⁻⁶ = 18.84 × 10² = 1884 m.",
+          ta: "1. √(LC) = 10⁻⁶ s\n2. λ = 2 × 3.14 × 3 × 10⁸ × 10⁻⁶ = 1884 m."
+        }
+      },
+      {
+        id: 46, unit: 5, ref: "Example 5.2",
+        q: {
+          en: "A magnetron in a microwave oven emits electromagnetic waves of frequency f = 2450 MHz. What magnetic field strength is required for electrons to move in circular paths with this frequency? (m = 9.11 × 10⁻³¹ kg, e = 1.6 × 10⁻¹⁹ C)",
+          ta: "மைக்ரோவேவ் அடுப்பிலுள்ள மேக்னட்ரான் 2450 MHz அதிர்வெண் கொண்ட மின்காந்த அலைகளை உமிழ்கிறது. எலக்ட்ரான்கள் இவ்வதிர்வெண்ணுடன் வட்டப்பாதையில் இயங்கத் தேவையான காந்தப்புல வலிமை என்ன?"
+        },
+        options: ["0.0875 T", "0.175 T", "0.043 T", "0.875 T"],
+        correct: 0,
+        hint: {
+          en: "Cyclotron frequency f = (e B) / (2π m)  ⇒  B = (2π m f) / e.",
+          ta: "சைக்ளோட்ரான் அதிர்வெண் f = (e B) / (2π m)  ⇒  B = (2π m f) / e."
+        },
+        scert: {
+          given: "f = 2450 MHz = 2.45 × 10⁹ Hz; m = 9.11 × 10⁻³¹ kg; e = 1.6 × 10⁻¹⁹ C",
+          toFind: "Magnetic field (B)",
+          formula: "B = (2π m f) / e",
+          logTable: {
+            caption: "Log & Antilog Table (from Unit 1 to 11 Problem PDF)",
+            rows: [
+              { no: "2", log: "0.3010" },
+              { no: "3.14", log: "0.4969" },
+              { no: "9.11", log: "0.9595" },
+              { no: "2.45", log: "0.3892" },
+              { no: "Sum (+)", log: "2.1466" },
+              { no: "1.6", log: "0.2041" },
+              { no: "Diff (−)", log: "1.9425" },
+              { no: "ALog (1.9425)", log: "87.6 × 10⁻³ = 0.0875 T" }
+            ]
+          }
+        },
+        solution: {
+          en: "B = (2 × 3.14 × 9.11 × 10⁻³¹ × 2.45 × 10⁹) / (1.6 × 10⁻¹⁹) = 0.0875 T.",
+          ta: "B = (2 × 3.14 × 9.11 × 10⁻³¹ × 2.45 × 10⁹) / (1.6 × 10⁻¹⁹) = 0.0875 T."
+        }
+      },
+      {
+        id: 47, unit: 6, ref: "Example 6.1",
+        q: {
+          en: "An object is placed at a distance of 20 cm in front of a concave mirror of focal length 15 cm. Find the position and nature of the image.",
+          ta: "15 cm குவியதூரம் கொண்ட குழியாடியின் முன் 20 cm தொலைவில் ஒரு பொருள் வைக்கப்பட்டுள்ளது. பிம்பத்தின் நிலை மற்றும் தன்மையைக் காண்க."
+        },
+        options: ["v = −60 cm (Real & inverted)", "v = +60 cm (Virtual & erect)", "v = −30 cm (Real & inverted)", "v = −12 cm (Virtual & erect)"],
+        correct: 0,
+        hint: {
+          en: "Mirror equation: 1/f = 1/v + 1/u, with u = −20 cm and f = −15 cm.",
+          ta: "ஆடிச் சமன்பாடு: 1/f = 1/v + 1/u, இங்கு u = −20 cm மற்றும் f = −15 cm."
+        },
+        scert: {
+          given: "u = −20 cm; f = −15 cm",
+          toFind: "Image distance (v) and nature",
+          formula: "1/v = 1/f − 1/u"
+        },
+        solution: {
+          en: "1/v = 1/(−15) − 1/(−20) = −1/15 + 1/20 = (−4 + 3)/60 = −1/60 ⇒ v = −60 cm.\nNegative sign shows image is real and inverted.",
+          ta: "1/v = −1/15 + 1/20 = −1/60 ⇒ v = −60 cm (மெய் மற்றும் தலைகீழான பிம்பம்)."
+        }
+      },
+      {
+        id: 48, unit: 6, ref: "Example 6.9",
+        q: {
+          en: "Find the radius of curvature of the curved surface of a plano-convex lens of focal length 12 cm and refractive index 1.5.",
+          ta: "12 cm குவியதூரமும் 1.5 ஒளிவிலகல் எண்ணும் கொண்ட தட்டக்குவிலென்சின் வளைவுப் பரப்பின் வளைவு ஆரத்தைக் காண்க."
+        },
+        options: ["6 cm", "12 cm", "24 cm", "18 cm"],
+        correct: 0,
+        hint: {
+          en: "Lens maker's formula: 1/f = (n − 1)(1/R1 − 1/R2). Here R1 = R and R2 = ∞.",
+          ta: "லென்ஸ் உருவாக்குபவர் சமன்பாடு: 1/f = (n − 1)(1/R1 − 1/R2), இங்கு R1 = R, R2 = ∞."
+        },
+        scert: {
+          given: "f = 12 cm; n = 1.5; R1 = R; R2 = ∞",
+          toFind: "Radius of curvature (R)",
+          formula: "1/f = (n − 1) / R"
+        },
+        solution: {
+          en: "1/12 = (1.5 − 1) / R = 0.5 / R  ⇒  R = 12 × 0.5 = 6 cm.",
+          ta: "1/12 = (1.5 − 1) / R  ⇒  R = 12 × 0.5 = 6 cm."
+        }
+      },
+      {
+        id: 49, unit: 6, ref: "Exercise 6.5",
+        q: {
+          en: "A thin converging glass lens (n = 1.5) has a power of +5.0 D. When this lens is immersed in a liquid of refractive index nL, it acts as a diverging lens of focal length 100 cm. Find the refractive index of the liquid.",
+          ta: "காற்றில் +5.0 D திறன் கொண்ட மெல்லிய குவிலென்ஸ் (n = 1.5), nL ஒளிவிலகல் எண் கொண்ட திரவத்தில் மூழ்கவைக்கப்படும்போது 100 cm குவியதூரம் கொண்ட குழிலென்சாகச் செயல்படுகிறது. திரவத்தின் ஒளிவிலகல் எண்ணைக் காண்க."
+        },
+        options: ["5/3 (1.67)", "4/3 (1.33)", "1.5", "1.25"],
+        correct: 0,
+        hint: {
+          en: "Pair = +5 D ⇒ fair = +20 cm. fliquid = −100 cm. Use fair / fliquid = [(ng/nL) − 1] / (ng − 1).",
+          ta: "fair = +20 cm, fliquid = −100 cm. fair / fliquid = [(ng/nL) − 1] / (ng − 1) பயன்படுத்துக."
+        },
+        scert: {
+          given: "fair = +20 cm; fliquid = −100 cm; ng = 1.5",
+          toFind: "Refractive index of liquid (nL)",
+          formula: "fair / fliquid = [(ng / nL) − 1] / (ng − 1)"
+        },
+        solution: {
+          en: "20 / (−100) = [(1.5 / nL) − 1] / (1.5 − 1)  ⇒  −0.2 × 0.5 = (1.5 / nL) − 1  ⇒  1.5 / nL = 0.9  ⇒  nL = 1.5 / 0.9 = 5/3 = 1.67.",
+          ta: "−0.2 = [(1.5 / nL) − 1] / 0.5  ⇒  1.5 / nL = 0.9  ⇒  nL = 5/3 = 1.67."
+        }
+      },
+      {
+        id: 50, unit: 7, ref: "Example 7.2",
+        q: {
+          en: "Two light sources with amplitudes 5 units and 3 units respectively interfere with each other. Calculate the ratio of maximum and minimum intensities.",
+          ta: "முறையே 5 அலகுகள் மற்றும் 3 அலகுகள் வீச்சு கொண்ட இரு ஒளி மூலங்கள் குறுக்கீட்டு விளைவை ஏற்படுத்துகின்றன. பெரும மற்றும் சிறும ஒளிச்செறிவுகளின் விகிதத்தைக் கணக்கிடுக."
+        },
+        options: ["16 : 1", "4 : 1", "25 : 9", "8 : 2"],
+        correct: 0,
+        hint: {
+          en: "Imax / Imin = (a1 + a2)² / (a1 − a2)².",
+          ta: "Imax / Imin = (a1 + a2)² / (a1 − a2)²."
+        },
+        scert: {
+          given: "a1 = 5 units; a2 = 3 units",
+          toFind: "Ratio Imax : Imin",
+          formula: "Imax / Imin = (a1 + a2)² / (a1 − a2)²"
+        },
+        solution: {
+          en: "Imax / Imin = (5 + 3)² / (5 − 3)² = 8² / 2² = 64 / 4 = 16 : 1.",
+          ta: "Imax / Imin = (5 + 3)² / (5 − 3)² = 64 / 4 = 16 : 1."
+        }
+      },
+      {
+        id: 51, unit: 2, ref: "Example 2.11", diagram: "q51",
+        q: {
+          en: "Find the equivalent resistance between points A and B when three parallel pairs of resistors (2 Ω || 2 Ω), (4 Ω || 4 Ω), and (6 Ω || 6 Ω) are connected in series.",
+          ta: "(2 Ω || 2 Ω), (4 Ω || 4 Ω) மற்றும் (6 Ω || 6 Ω) ஆகிய மூன்று பக்க இணைப்பு மின்தடைத் தொகுப்புகள் தொடரிணைப்பில் இணைக்கப்பட்டுள்ளன. A மற்றும் B புள்ளிகளுக்கு இடையே உள்ள தொகுபயன் மின்தடையைக் காண்க."
+        },
+        options: ["6 Ω", "12 Ω", "24 Ω", "3 Ω"],
+        correct: 0,
+        hint: {
+          en: "Rp1 = 2/2 = 1 Ω; Rp2 = 4/2 = 2 Ω; Rp3 = 6/2 = 3 Ω. Total RAB = Rp1 + Rp2 + Rp3.",
+          ta: "Rp1 = 2/2 = 1 Ω; Rp2 = 4/2 = 2 Ω; Rp3 = 6/2 = 3 Ω. மொத்த RAB = Rp1 + Rp2 + Rp3."
+        },
+        scert: {
+          given: "Pair 1: 2 Ω || 2 Ω; Pair 2: 4 Ω || 4 Ω; Pair 3: 6 Ω || 6 Ω",
+          toFind: "Equivalent resistance (RAB)",
+          formula: "RAB = Rp1 + Rp2 + Rp3"
+        },
+        solution: {
+          en: "Rp1 = 1 Ω, Rp2 = 2 Ω, Rp3 = 3 Ω.\nRAB = 1 + 2 + 3 = 6 Ω.",
+          ta: "Rp1 = 1 Ω, Rp2 = 2 Ω, Rp3 = 3 Ω.\nRAB = 1 + 2 + 3 = 6 Ω."
+        }
+      },
+      {
+        id: 52, unit: 1, ref: "Exercise 1.1",
+        q: {
+          en: "When two objects are rubbed with each other, approximately a charge of 50 nC can be produced in each object. Calculate the number of electrons that must be transferred to produce this charge.",
+          ta: "இரு பொருள்களை ஒன்றோடொன்று தேய்க்கும்போது ஒவ்வொன்றிலும் தோராயமாக 50 nC மின்னூட்டம் உருவாகிறது. இம்மின்னூட்டத்தை உருவாக்க இடமாற்றம் செய்யப்பட வேண்டிய எலக்ட்ரான்களின் எண்ணிக்கையைக் கணக்கிடுக."
+        },
+        options: ["3.125 × 10¹¹ electrons", "6.25 × 10¹¹ electrons", "3.125 × 10⁹ electrons", "1.6 × 10¹¹ electrons"],
+        correct: 0,
+        hint: {
+          en: "n = q / e, where q = 50 nC = 50 × 10⁻⁹ C.",
+          ta: "n = q / e, இங்கு q = 50 nC = 50 × 10⁻⁹ C."
+        },
+        scert: {
+          given: "q = 50 nC = 50 × 10⁻⁹ C; e = 1.6 × 10⁻¹⁹ C",
+          toFind: "Number of electrons (n)",
+          formula: "n = q / e"
+        },
+        solution: {
+          en: "n = (50 × 10⁻⁹) / (1.6 × 10⁻¹⁹) = 31.25 × 10¹⁰ = 3.125 × 10¹¹ electrons.",
+          ta: "n = (50 × 10⁻⁹) / (1.6 × 10⁻¹⁹) = 3.125 × 10¹¹ எலக்ட்ரான்கள்."
+        }
+      },
+      {
+        id: 53, unit: 1, ref: "Example 1.24",
+        q: {
+          en: "A parallel plate capacitor has square plates of side 5 cm and separated by a distance of 1 mm. Calculate the capacitance of this capacitor. (ε0 = 8.854 × 10⁻¹² F m⁻¹)",
+          ta: "5 cm பக்க அளவு கொண்ட சதுரத் தட்டுகள் 1 mm இடைவெளியில் பிரித்து வைக்கப்பட்டுள்ள இணைத்தட்டு மின்தேக்கியின் மின்தேக்குத்திறனைக் கணக்கிடுக. (ε0 = 8.854 × 10⁻¹² F m⁻¹)"
+        },
+        options: ["22.14 pF", "44.27 pF", "11.07 pF", "8.85 pF"],
+        correct: 0,
+        hint: {
+          en: "C = ε0 A / d, where A = (5 × 10⁻²)² = 25 × 10⁻⁴ m² and d = 10⁻³ m.",
+          ta: "C = ε0 A / d, இங்கு A = (5 × 10⁻²)² = 25 × 10⁻⁴ m² மற்றும் d = 10⁻³ m."
+        },
+        scert: {
+          given: "a = 5 cm = 5 × 10⁻² m; A = 25 × 10⁻⁴ m²; d = 1 mm = 10⁻³ m; ε0 = 8.854 × 10⁻¹² F m⁻¹",
+          toFind: "Capacitance (C)",
+          formula: "C = ε0 A / d",
+          logTable: {
+            caption: "Log & Antilog Table (from Unit 1 to 11 Problem PDF)",
+            rows: [
+              { no: "8.854", log: "0.9471" },
+              { no: "2.5", log: "0.3979" },
+              { no: "Sum (+)", log: "1.3450" },
+              { no: "ALog (1.3450)", log: "22.13 × 10⁻¹² F = 22.14 pF" }
+            ]
+          }
+        },
+        solution: {
+          en: "C = (8.854 × 10⁻¹² × 25 × 10⁻⁴) / 10⁻³ = 22.135 × 10⁻¹² F = 22.14 pF.",
+          ta: "C = (8.854 × 10⁻¹² × 25 × 10⁻⁴) / 10⁻³ = 22.14 pF."
+        }
+      },
+      {
+        id: 54, unit: 2, ref: "Example 2.18", diagram: "q54",
+        q: {
+          en: "For the given circuit junction P, incoming currents are 0.2 A, 0.6 A, 0.7 A and outgoing currents are 0.4 A, 0.5 A, and I. Determine the value of current I using Kirchhoff's current rule.",
+          ta: "கொடுக்கப்பட்டுள்ள P சந்தியில் உள்வரும் மின்னோட்டங்கள் 0.2 A, 0.6 A, 0.7 A மற்றும் வெளிச்செல்லும் மின்னோட்டங்கள் 0.4 A, 0.5 A மற்றும் I எனில், கிர்க்காஃப் மின்னோட்ட விதிப்படி I-ன் மதிப்பைக் காண்க."
+        },
+        options: ["0.6 A", "0.4 A", "0.9 A", "1.5 A"],
+        correct: 0,
+        hint: {
+          en: "Sum of currents entering junction = Sum of currents leaving junction.",
+          ta: "சந்தியை நோக்கிச் செல்லும் மின்னோட்டங்களின் கூடுதல் = சந்தியை விட்டு வெளியேறும் மின்னோட்டங்களின் கூடுதல்."
+        },
+        scert: {
+          given: "Incoming: 0.2 A, 0.6 A, 0.7 A; Outgoing: 0.4 A, 0.5 A, I",
+          toFind: "Unknown current (I)",
+          formula: "Σ Ientering = Σ Ileaving"
+        },
+        solution: {
+          en: "0.2 + 0.6 + 0.7 = 0.4 + 0.5 + I  ⇒  1.5 = 0.9 + I  ⇒  I = 1.5 − 0.9 = 0.6 A.",
+          ta: "0.2 + 0.6 + 0.7 = 0.4 + 0.5 + I  ⇒  1.5 = 0.9 + I  ⇒  I = 0.6 A."
+        }
+      },
+      {
+        id: 55, unit: 2, ref: "Example 2.14",
+        q: {
+          en: "An electric heater of resistance 10 Ω is connected to a 220 V power supply. Calculate the heat energy produced in 5 minutes.",
+          ta: "10 Ω மின்தடை கொண்ட மின்சூடேற்றி 220 V மின்மூலத்துடன் இணைக்கப்பட்டுள்ளது. 5 நிமிடங்களில் உருவாகும் வெப்ப ஆற்றலைக் கணக்கிடுக."
+        },
+        options: ["1.452 × 10⁶ J", "2.904 × 10⁶ J", "4.84 × 10⁵ J", "7.26 × 10⁵ J"],
+        correct: 0,
+        hint: {
+          en: "H = (V² / R) × t, where t = 5 × 60 = 300 s.",
+          ta: "H = (V² / R) × t, இங்கு t = 5 × 60 = 300 s."
+        },
+        scert: {
+          given: "R = 10 Ω; V = 220 V; t = 5 min = 300 s",
+          toFind: "Heat energy (H)",
+          formula: "H = (V² / R) t"
+        },
+        solution: {
+          en: "H = (220² / 10) × 300 = (48400 / 10) × 300 = 4840 × 300 = 1.452 × 10⁶ J.",
+          ta: "H = (220² / 10) × 300 = 1.452 × 10⁶ J."
+        }
+      },
+      {
+        id: 56, unit: 3, ref: "Example 3.7",
+        q: {
+          en: "Compute the magnetic susceptibility and relative permeability of a material if a magnetising field of 100 A m⁻¹ produces a magnetisation of 250 A m⁻¹.",
+          ta: "100 A m⁻¹ காந்தமாக்கும் புலம் ஒரு பொருளில் 250 A m⁻¹ காந்தமாக்கலை உருவாக்கினால், அப்பொருளின் காந்த ஏற்புத்திறன் மற்றும் ஒப்புமை உட்புகுதிறனைக் கணக்கிடுக."
+        },
+        options: ["χm = 2.5 and μr = 3.5", "χm = 2.5 and μr = 2.5", "χm = 0.4 and μr = 1.4", "χm = 3.5 and μr = 2.5"],
+        correct: 0,
+        hint: {
+          en: "χm = M / H and μr = 1 + χm.",
+          ta: "χm = M / H மற்றும் μr = 1 + χm."
+        },
+        scert: {
+          given: "H = 100 A m⁻¹; M = 250 A m⁻¹",
+          toFind: "Magnetic susceptibility (χm) and relative permeability (μr)",
+          formula: "χm = M / H ;   μr = 1 + χm"
+        },
+        solution: {
+          en: "1. χm = 250 / 100 = 2.5\n2. μr = 1 + 2.5 = 3.5.",
+          ta: "1. χm = 250 / 100 = 2.5\n2. μr = 1 + 2.5 = 3.5."
+        }
+      },
+      {
+        id: 57, unit: 4, ref: "Example 4.11",
+        q: {
+          en: "Find the RMS value of an alternating current whose peak value is 10√2 A.",
+          ta: "பெரும மதிப்பு 10√2 A கொண்ட மாறுதிசை மின்னோட்டத்தின் பயனுறு (RMS) மதிப்பைக் காண்க."
+        },
+        options: ["10 A", "14.14 A", "20 A", "5 A"],
+        correct: 0,
+        hint: {
+          en: "Irms = Im / √2.",
+          ta: "Irms = Im / √2."
+        },
+        scert: {
+          given: "Im = 10√2 A",
+          toFind: "RMS current (Irms)",
+          formula: "Irms = Im / √2"
+        },
+        solution: {
+          en: "Irms = (10√2) / √2 = 10 A.",
+          ta: "Irms = (10√2) / √2 = 10 A."
+        }
+      },
+      {
+        id: 58, unit: 4, ref: "Exercise 4.10",
+        q: {
+          en: "In an AC circuit with resistor R = 10 Ω, inductor XL = 20 Ω and capacitor XC = 20 Ω connected in series to a 200 V AC source, find the power factor and power consumed.",
+          ta: "R = 10 Ω, XL = 20 Ω மற்றும் XC = 20 Ω ஆகியவை 200 V AC மூலத்துடன் தொடரிணைப்பில் இணைக்கப்பட்டுள்ள சுற்றின் திறன் காரணி மற்றும் நுகரப்படும் திறனைக் காண்க."
+        },
+        options: ["cos φ = 1 and P = 4000 W", "cos φ = 0.5 and P = 2000 W", "cos φ = 0 and P = 0 W", "cos φ = 1 and P = 2000 W"],
+        correct: 0,
+        hint: {
+          en: "Since XL = XC, circuit is in resonance: Z = R = 10 Ω, cos φ = R/Z = 1, P = V² / R.",
+          ta: "XL = XC என்பதால் சுற்று ஒத்ததிர்வில் உள்ளது: Z = R = 10 Ω, cos φ = 1, P = V² / R."
+        },
+        scert: {
+          given: "R = 10 Ω; XL = 20 Ω; XC = 20 Ω; Vrms = 200 V",
+          toFind: "Power factor (cos φ) and Power (P)",
+          formula: "Z = √[R² + (XL − XC)²] ;   cos φ = R / Z ;   P = Vrms² / R"
+        },
+        solution: {
+          en: "1. Z = √[10² + (20 − 20)²] = 10 Ω\n2. cos φ = 10 / 10 = 1\n3. P = 200² / 10 = 40000 / 10 = 4000 W.",
+          ta: "1. Z = 10 Ω\n2. cos φ = 1\n3. P = 200² / 10 = 4000 W."
+        }
+      },
+      {
+        id: 59, unit: 6, ref: "Example 6.18",
+        q: {
+          en: "A compound microscope has a magnifying power of 100 when the image is formed at infinity. The objective has a focal length of 0.5 cm and the tube length is 6.5 cm. Find the focal length of the eyepiece.",
+          ta: "பிம்பம் ஈறிலாத் தொலைவில் உருவாகும்போது ஒரு கூட்டு நுண்ணோக்கியின் உருப்பெருக்கத் திறன் 100 ஆகும். பொருளருகு லென்சின் குவியதூரம் 0.5 cm மற்றும் குழாய் நீளம் 6.5 cm எனில், கண்ணருகு லென்சின் குவியதூரத்தைக் காண்க. (D = 25 cm)"
+        },
+        options: ["3.25 cm", "2.50 cm", "5.00 cm", "1.62 cm"],
+        correct: 0,
+        hint: {
+          en: "m = (L / fo) × (D / fe)  ⇒  fe = (L × D) / (fo × m), where D = 25 cm.",
+          ta: "m = (L / fo) × (D / fe)  ⇒  fe = (L × D) / (fo × m), இங்கு D = 25 cm."
+        },
+        scert: {
+          given: "m = 100; fo = 0.5 cm; L = 6.5 cm; D = 25 cm",
+          toFind: "Focal length of eyepiece (fe)",
+          formula: "fe = (L × D) / (fo × m)",
+          logTable: {
+            caption: "Log & Antilog Table (from Unit 1 to 11 Problem PDF)",
+            rows: [
+              { no: "6.5", log: "0.8129" },
+              { no: "25", log: "1.3979" },
+              { no: "Sum (+)", log: "2.2108" },
+              { no: "50 (0.5×100)", log: "1.6990" },
+              { no: "Diff (−)", log: "0.5118" },
+              { no: "ALog (0.5118)", log: "3.25 cm" }
+            ]
+          }
+        },
+        solution: {
+          en: "fe = (6.5 × 25) / (0.5 × 100) = 162.5 / 50 = 3.25 cm.",
+          ta: "fe = (6.5 × 25) / (0.5 × 100) = 162.5 / 50 = 3.25 cm."
+        }
+      },
+      {
+        id: 60, unit: 6, ref: "Example 6.20",
+        q: {
+          en: "A small telescope has an objective lens of focal length 125 cm and an eyepiece of focal length 2 cm. What is the magnifying power of the telescope in normal adjustment?",
+          ta: "ஒரு சிறிய தொலைநோக்கியின் பொருளருகு லென்சின் குவியதூரம் 125 cm மற்றும் கண்ணருகு லென்சின் குவியதூரம் 2 cm எனில், இயல்பு நிலையில் தொலைநோக்கியின் உருப்பெருக்கத் திறன் என்ன?"
+        },
+        options: ["62.5", "127", "250", "31.25"],
+        correct: 0,
+        hint: {
+          en: "Magnifying power m = fo / fe.",
+          ta: "உருப்பெருக்கத் திறன் m = fo / fe."
+        },
+        scert: {
+          given: "fo = 125 cm; fe = 2 cm",
+          toFind: "Magnifying power (m)",
+          formula: "m = fo / fe"
+        },
+        solution: {
+          en: "m = 125 / 2 = 62.5.",
+          ta: "m = 125 / 2 = 62.5."
+        }
+      },
+      {
+        id: 61, unit: 7, ref: "Example 7.8",
+        q: {
+          en: "Light of wavelength 5000 Å produces diffraction pattern of single slit of width 2.5 μm. What is the order of diffraction pattern obtained at an angle of 30°?",
+          ta: "5000 Å அலைநீளம் கொண்ட ஒளி 2.5 μm அகலமுள்ள ஒற்றைப் பிளவின் வழியே விளிம்பு விளைவை ஏற்படுத்துகிறது. 30° கோணத்தில் கிடைக்கும் விளிம்பு விளைவு வரிசை (n) என்ன?"
+        },
+        options: ["n = 2.5 (Between 2nd & 3rd minimum)", "n = 5", "n = 2", "n = 1"],
+        correct: 0,
+        hint: {
+          en: "a sin θ = n λ  ⇒  n = (a sin 30°) / λ.",
+          ta: "a sin θ = n λ  ⇒  n = (a sin 30°) / λ."
+        },
+        scert: {
+          given: "λ = 5000 Å = 5 × 10⁻⁷ m; a = 2.5 μm = 2.5 × 10⁻⁶ m; θ = 30°",
+          toFind: "Order of diffraction (n)",
+          formula: "n = (a sin θ) / λ"
+        },
+        solution: {
+          en: "n = (2.5 × 10⁻⁶ × 0.5) / (5 × 10⁻⁷) = (1.25 × 10⁻⁶) / (0.5 × 10⁻⁶) = 2.5.",
+          ta: "n = (2.5 × 10⁻⁶ × 0.5) / (5 × 10⁻⁷) = 2.5."
+        }
+      },
+      {
+        id: 62, unit: 8, ref: "Example 8.1",
+        q: {
+          en: "For the photoelectric emission from cesium, the threshold wavelength is 652 nm. Calculate the work function of cesium in eV.",
+          ta: "சீசியத்திலிருந்து ஒளிமின் உமிழ்வு நிகழ பயன்தொடக்க அலைநீளம் 652 nm எனில், சீசியத்தின் வெளியேற்று ஆற்றலை eV-ல் கணக்கிடுக."
+        },
+        options: ["1.90 eV", "3.80 eV", "2.30 eV", "1.50 eV"],
+        correct: 0,
+        hint: {
+          en: "Work function Φ0 = h c / (λ0 e).",
+          ta: "வெளியேற்று ஆற்றல் Φ0 = h c / (λ0 e)."
+        },
+        scert: {
+          given: "λ0 = 652 nm = 652 × 10⁻⁹ m; h = 6.626 × 10⁻³⁴ J s; c = 3 × 10⁸ m s⁻¹",
+          toFind: "Work function (Φ0)",
+          formula: "Φ0 = hc / (λ0 e)"
+        },
+        solution: {
+          en: "Φ0 = (6.626 × 10⁻³⁴ × 3 × 10⁸) / (652 × 10⁻⁹ × 1.6 × 10⁻¹⁹) = 1.905 eV ≈ 1.90 eV.",
+          ta: "Φ0 = (6.626 × 10⁻³⁴ × 3 × 10⁸) / (652 × 10⁻⁹ × 1.6 × 10⁻¹⁹) = 1.90 eV."
+        }
+      },
+      {
+        id: 63, unit: 8, ref: "Example 8.5",
+        q: {
+          en: "Find the de Broglie wavelength associated with an alpha particle which is accelerated through a potential difference of 400 V. (Mass of alpha particle = 6.64 × 10⁻²⁷ kg, charge = 3.2 × 10⁻¹⁹ C)",
+          ta: "400 V மின்னழுத்த வேறுபாட்டால் முடுக்கப்படும் ஆல்பா துகளின் டி ப்ராய் அலைநீளத்தைக் காண்க. (நிறை = 6.64 × 10⁻²⁷ kg, மின்னூட்டம் = 3.2 × 10⁻¹⁹ C)"
+        },
+        options: ["0.005 Å (5 × 10⁻¹³ m)", "0.05 Å", "0.5 Å", "5 Å"],
+        correct: 0,
+        hint: {
+          en: "λ = h / √(2 m q V).",
+          ta: "λ = h / √(2 m q V)."
+        },
+        scert: {
+          given: "V = 400 V; m = 6.64 × 10⁻²⁷ kg; q = 3.2 × 10⁻¹⁹ C",
+          toFind: "de Broglie wavelength (λ)",
+          formula: "λ = h / √(2 m q V)"
+        },
+        solution: {
+          en: "1. 2 m q V = 2 × 6.64 × 10⁻²⁷ × 3.2 × 10⁻¹⁹ × 400 = 1.7 × 10⁻⁴²\n2. √(2 m q V) = 1.304 × 10⁻²¹\n3. λ = (6.626 × 10⁻³⁴) / (1.304 × 10⁻²¹) = 5.08 × 10⁻¹³ m ≈ 0.005 Å.",
+          ta: "λ = (6.626 × 10⁻³⁴) / √(2 × 6.64 × 10⁻²⁷ × 3.2 × 10⁻¹⁹ × 400) = 5 × 10⁻¹³ m = 0.005 Å."
+        }
+      },
+      {
+        id: 64, unit: 9, ref: "Example 9.2",
+        q: {
+          en: "Find the radius of the first Bohr orbit of hydrogen atom. (h = 6.626 × 10⁻³⁴ J s, ε0 = 8.854 × 10⁻¹² F m⁻¹, me = 9.11 × 10⁻³¹ kg, e = 1.6 × 10⁻¹⁹ C)",
+          ta: "ஹைட்ரஜன் அணுவின் முதல் போர் சுற்றுப்பாதையின் ஆரத்தைக் காண்க."
+        },
+        options: ["0.53 Å", "1.06 Å", "2.12 Å", "0.265 Å"],
+        correct: 0,
+        hint: {
+          en: "r1 = (ε0 h²) / (π me e²) = 0.529 Å ≈ 0.53 Å.",
+          ta: "r1 = (ε0 h²) / (π me e²) = 0.529 Å ≈ 0.53 Å."
+        },
+        scert: {
+          given: "n = 1; Z = 1",
+          toFind: "First Bohr radius (r1)",
+          formula: "r1 = (ε0 h²) / (π me e²)"
+        },
+        solution: {
+          en: "r1 = (8.854 × 10⁻¹² × (6.626 × 10⁻³⁴)²) / (3.14 × 9.11 × 10⁻³¹ × (1.6 × 10⁻¹⁹)²) = 0.529 × 10⁻¹⁰ m ≈ 0.53 Å.",
+          ta: "r1 = 0.529 × 10⁻¹⁰ m ≈ 0.53 Å."
+        }
+      },
+      {
+        id: 65, unit: 9, ref: "Example 9.11",
+        q: {
+          en: "Calculate the activity of 1 g of radium-226 whose half-life is 1600 years. (1 year = 3.156 × 10⁷ s)",
+          ta: "1600 ஆண்டுகள் அரை ஆயுட்காலம் கொண்ட 1 g ரேடியம்-226-ன் கதிரியக்கச் செயல்பாட்டைக் கணக்கிடுக. (1 ஆண்டு = 3.156 × 10⁷ s)"
+        },
+        options: ["3.66 × 10¹⁰ Bq (≈ 1 Ci)", "1.83 × 10¹⁰ Bq", "7.32 × 10¹⁰ Bq", "3.66 × 10⁷ Bq"],
+        correct: 0,
+        hint: {
+          en: "N = (1 / 226) × 6.023 × 10²³; λ = 0.6931 / T½; Activity R = λ N.",
+          ta: "N = (1 / 226) × 6.023 × 10²³; λ = 0.6931 / T½; செயல்பாடு R = λ N."
+        },
+        scert: {
+          given: "m = 1 g; M = 226 g; T½ = 1600 × 3.156 × 10⁷ s = 5.05 × 10¹⁰ s",
+          toFind: "Activity (R)",
+          formula: "N = (m / M) NA ;   R = (0.6931 / T½) N",
+          logTable: {
+            caption: "Log & Antilog Table (from Unit 1 to 11 Problem PDF)",
+            rows: [
+              { no: "0.6931", log: "1̄.8408" },
+              { no: "6.023", log: "0.7798" },
+              { no: "Sum (+)", log: "0.6206" },
+              { no: "226", log: "2.3541" },
+              { no: "5.05", log: "0.7033" },
+              { no: "Denom (+)", log: "3.0574" },
+              { no: "Diff (−)", log: "3̄.5632" },
+              { no: "ALog (3̄.5632)", log: "3.66 × 10¹⁰ Bq" }
+            ]
+          }
+        },
+        solution: {
+          en: "1. N = (6.023 × 10²³) / 226 = 2.665 × 10²¹ atoms\n2. R = (0.6931 × 2.665 × 10²¹) / (5.05 × 10¹⁰) = 3.66 × 10¹⁰ Bq.",
+          ta: "1. N = 2.665 × 10²¹ அணுக்கள்\n2. R = (0.6931 × 2.665 × 10²¹) / (5.05 × 10¹⁰) = 3.66 × 10¹⁰ Bq."
+        }
+      },
+      {
+        id: 66, unit: 9, ref: "Exercise 9.4",
+        q: {
+          en: "Two radioactive elements A and B have half-lives T½A = 20 minutes and T½B = 40 minutes respectively. Initially both have equal number of nuclei. Find the ratio of decayed nuclei of A to B after 80 minutes.",
+          ta: "A மற்றும் B ஆகிய இரு கதிரியக்கத் தனிமங்களின் அரை ஆயுட்காலங்கள் முறையே T½A = 20 நிமிடங்கள் மற்றும் T½B = 40 நிமிடங்கள் ஆகும். தொடக்கத்தில் இரண்டும் சம எண்ணிக்கையில் அணுக்கருக்களைக் கொண்டிருந்தால், 80 நிமிடங்களுக்குப் பிறகு சிதைந்த அணுக்கருக்களின் விகிதம் என்ன?"
+        },
+        options: ["5 : 4", "4 : 5", "1 : 4", "3 : 4"],
+        correct: 0,
+        hint: {
+          en: "For A: nA = 80/20 = 4 ⇒ NA = N0/16 ⇒ Decayed = 15 N0 / 16. For B: nB = 80/40 = 2 ⇒ NB = N0/4 ⇒ Decayed = 3 N0 / 4.",
+          ta: "A-க்கு nA = 4 ⇒ சிதைந்தவை = 15 N0/16. B-க்கு nB = 2 ⇒ சிதைந்தவை = 3 N0/4."
+        },
+        scert: {
+          given: "T½A = 20 min; T½B = 40 min; t = 80 min",
+          toFind: "Ratio of decayed nuclei (N0 − NA) : (N0 − NB)",
+          formula: "N = N0 / 2ⁿ ;   Decayed = N0 − N"
+        },
+        solution: {
+          en: "1. For A: nA = 80/20 = 4 → Decayed = N0 − N0/16 = (15/16) N0\n2. For B: nB = 80/40 = 2 → Decayed = N0 − N0/4 = (3/4) N0 = (12/16) N0\n3. Ratio = 15 : 12 = 5 : 4.",
+          ta: "1. A சிதைந்தவை = (15/16) N0\n2. B சிதைந்தவை = (3/4) N0 = (12/16) N0\n3. விகிதம் = 15 : 12 = 5 : 4."
+        }
+      },
+      {
+        id: 67, unit: 4, ref: "Example 4.17",
+        q: {
+          en: "The self-inductance of an air-core solenoid is 4.8 mH. If its core is replaced by an iron core, its self-inductance becomes 1.8 H. Find out the relative permeability of iron.",
+          ta: "காற்று உள்ளகம் கொண்ட வரிச்சுருளின் தன்மின்தூண்டல் எண் 4.8 mH ஆகும். அதன் உள்ளகத்தை இரும்பு உள்ளகமாக மாற்றினால் தன்மின்தூண்டல் எண் 1.8 H ஆக மாறுகிறது. இரும்பின் ஒப்புமை உட்புகுதிறனைக் காண்க."
+        },
+        options: ["375", "180", "480", "250"],
+        correct: 0,
+        hint: {
+          en: "μr = Liron / Lair.",
+          ta: "μr = Lஇரும்பு / Lகாற்று."
+        },
+        scert: {
+          given: "Lair = 4.8 mH = 4.8 × 10⁻³ H; Liron = 1.8 H",
+          toFind: "Relative permeability (μr)",
+          formula: "μr = Liron / Lair"
+        },
+        solution: {
+          en: "μr = 1.8 / (4.8 × 10⁻³) = 1800 / 4.8 = 375.",
+          ta: "μr = 1.8 / (4.8 × 10⁻³) = 375."
+        }
+      },
+      {
+        id: 68, unit: 4, ref: "Exercise 4.7",
+        q: {
+          en: "A square coil of side 30 cm with 500 turns is kept in a uniform magnetic field of 0.4 T. The plane of the coil is inclined at an angle of 30° to the field. Calculate the magnetic flux through the coil.",
+          ta: "30 cm பக்க அளவும் 500 சுற்றுகளும் கொண்ட சதுரக் கம்பிச்சுருள் 0.4 T சீரான காந்தப்புலத்தில் வைக்கப்பட்டுள்ளது. கம்பிச்சுருளின் தளம் காந்தப்புலத்துடன் 30° கோணம் சாய்ந்திருந்தால், கம்பிச்சுருள் வழியே செல்லும் காந்தப்பாயத்தைக் கணக்கிடுக."
+        },
+        options: ["9 Wb", "15.59 Wb", "18 Wb", "4.5 Wb"],
+        correct: 0,
+        hint: {
+          en: "Angle between plane and B is 30°, so angle θ between normal and B is 90° − 30° = 60°. ΦB = N B A cos 60°.",
+          ta: "தளம் மற்றும் B இடையே கோணம் 30°, எனவே செங்குத்துக் கோடு மற்றும் B இடையே கோணம் θ = 60°. ΦB = N B A cos 60°."
+        },
+        scert: {
+          given: "a = 0.3 m ⇒ A = 0.09 m²; N = 500; B = 0.4 T; θ = 90° − 30° = 60°",
+          toFind: "Magnetic flux (ΦB)",
+          formula: "ΦB = N B A cos θ",
+          logTable: {
+            caption: "Log & Antilog Table (from Unit 1 to 11 Problem PDF)",
+            rows: [
+              { no: "500", log: "2.6990" },
+              { no: "0.4", log: "1̄.6021" },
+              { no: "0.09", log: "2̄.9542" },
+              { no: "0.5 (cos 60°)", log: "1̄.6990" },
+              { no: "Sum (+)", log: "0.9543" },
+              { no: "ALog (0.9543)", log: "9.00 Wb" }
+            ]
+          }
+        },
+        solution: {
+          en: "ΦB = 500 × 0.4 × 0.09 × cos 60° = 18 × 0.5 = 9 Wb.",
+          ta: "ΦB = 500 × 0.4 × 0.09 × 0.5 = 9 Wb."
+        }
+      },
+      {
+        id: 69, unit: 6, ref: "Example 6.12",
+        q: {
+          en: "An object of height 3 cm is placed at 10 cm in front of a convex lens of focal length 15 cm. Find the position and height of the image.",
+          ta: "15 cm குவியதூரம் கொண்ட குவிலென்சின் முன் 10 cm தொலைவில் 3 cm உயரமுள்ள பொருள் வைக்கப்பட்டுள்ளது. பிம்பத்தின் நிலை மற்றும் உயரத்தைக் காண்க."
+        },
+        options: ["v = −30 cm and height = 9 cm", "v = +30 cm and height = 9 cm", "v = −6 cm and height = 1.8 cm", "v = −30 cm and height = 1 cm"],
+        correct: 0,
+        hint: {
+          en: "1/f = 1/v − 1/u, with u = −10 cm and f = +15 cm. Magnification m = v / u = h' / h.",
+          ta: "1/f = 1/v − 1/u, இங்கு u = −10 cm, f = +15 cm. உருப்பெருக்கம் m = v / u = h' / h."
+        },
+        scert: {
+          given: "h = 3 cm; u = −10 cm; f = +15 cm",
+          toFind: "Image position (v) and height (h')",
+          formula: "1/v = 1/f + 1/u ;   h' = (v / u) h",
+          logTable: {
+            caption: "Log & Antilog Table (from Unit 1 to 11 Problem PDF)",
+            rows: [
+              { no: "30", log: "1.4771" },
+              { no: "3", log: "0.4771" },
+              { no: "Sum (+)", log: "1.9542" },
+              { no: "10", log: "1.0000" },
+              { no: "Diff (−)", log: "0.9542" },
+              { no: "ALog (0.9542)", log: "9.00 cm" }
+            ]
+          }
+        },
+        solution: {
+          en: "1. 1/v = 1/15 + 1/(−10) = (2 − 3)/30 = −1/30 ⇒ v = −30 cm\n2. h' = (−30 / −10) × 3 = 3 × 3 = 9 cm.",
+          ta: "1. 1/v = 1/15 − 1/10 = −1/30 ⇒ v = −30 cm\n2. h' = (−30 / −10) × 3 = 9 cm."
+        }
+      },
+      {
+        id: 70, unit: 8, ref: "Example 8.6",
+        q: {
+          en: "Calculate the momentum and de Broglie wavelength of an electron accelerated through a potential difference of 54 V.",
+          ta: "54 V மின்னழுத்த வேறுபாட்டால் முடுக்கப்படும் எலக்ட்ரானின் உந்தம் மற்றும் டி ப்ராய் அலைநீளத்தைக் கணக்கிடுக."
+        },
+        options: ["p = 3.97 × 10⁻²⁴ kg m s⁻¹ and λ = 1.67 Å", "p = 1.98 × 10⁻²⁴ kg m s⁻¹ and λ = 3.34 Å", "p = 3.97 × 10⁻²⁴ kg m s⁻¹ and λ = 0.83 Å", "p = 7.94 × 10⁻²⁴ kg m s⁻¹ and λ = 1.67 Å"],
+        correct: 0,
+        hint: {
+          en: "λ = 12.27 / √V Å, and momentum p = h / λ.",
+          ta: "λ = 12.27 / √V Å, மற்றும் உந்தம் p = h / λ."
+        },
+        scert: {
+          given: "V = 54 V; h = 6.626 × 10⁻³⁴ J s",
+          toFind: "de Broglie wavelength (λ) and momentum (p)",
+          formula: "λ = 12.27 / √V Å ;   p = h / λ",
+          logTable: {
+            caption: "Log & Antilog Table (from Unit 1 to 11 Problem PDF)",
+            rows: [
+              { no: "12.27", log: "1.0888" },
+              { no: "½ log(54)", log: "0.8662" },
+              { no: "Diff (−)", log: "0.2226" },
+              { no: "ALog (0.2226)", log: "1.67 Å" }
+            ]
+          }
+        },
+        solution: {
+          en: "1. λ = 12.27 / √54 = 12.27 / 7.348 = 1.67 Å = 1.67 × 10⁻¹⁰ m\n2. p = (6.626 × 10⁻³⁴) / (1.67 × 10⁻¹⁰) = 3.97 × 10⁻²⁴ kg m s⁻¹.",
+          ta: "1. λ = 12.27 / √54 = 1.67 Å\n2. p = (6.626 × 10⁻³⁴) / (1.67 × 10⁻¹⁰) = 3.97 × 10⁻²⁴ kg m s⁻¹."
+        }
+      },
+      {
+        id: 71, unit: 9, ref: "Example 9.9",
+        q: {
+          en: "Half-life of a radioactive element is 10 days. Calculate its mean life and decay constant.",
+          ta: "ஒரு கதிரியக்கத் தனிமத்தின் அரை ஆயுட்காலம் 10 நாட்கள் எனில், அதன் சராசரி ஆயுட்காலம் மற்றும் சிதைவு மாறிலியைக் கணக்கிடுக."
+        },
+        options: ["τ = 14.43 days and λ = 0.0693 day⁻¹", "τ = 6.93 days and λ = 0.144 day⁻¹", "τ = 20 days and λ = 0.05 day⁻¹", "τ = 10 days and λ = 0.10 day⁻¹"],
+        correct: 0,
+        hint: {
+          en: "Mean life τ = T½ / 0.6931 = 1.443 × T½, and decay constant λ = 0.6931 / T½.",
+          ta: "சராசரி ஆயுள் τ = T½ / 0.6931, சிதைவு மாறிலி λ = 0.6931 / T½."
+        },
+        scert: {
+          given: "T½ = 10 days",
+          toFind: "Mean life (τ) and decay constant (λ)",
+          formula: "λ = 0.6931 / T½ ;   τ = 1 / λ",
+          logTable: {
+            caption: "Log & Antilog Table (from Unit 1 to 11 Problem PDF)",
+            rows: [
+              { no: "10", log: "1.0000" },
+              { no: "0.6931", log: "1̄.8408" },
+              { no: "Diff (−)", log: "1.1592" },
+              { no: "ALog (1.1592)", log: "14.43 days" }
+            ]
+          }
+        },
+        solution: {
+          en: "1. λ = 0.6931 / 10 = 0.06931 day⁻¹\n2. τ = 1 / 0.06931 = 14.43 days.",
+          ta: "1. λ = 0.6931 / 10 = 0.06931 day⁻¹\n2. τ = 10 / 0.6931 = 14.43 நாட்கள்."
+        }
+      },
+      {
+        id: 72, unit: 10, ref: "Example 10.4", diagram: "q72",
+        q: {
+          en: "In the given Zener diode voltage regulator circuit, supply voltage V = 15 V, Zener voltage VZ = 9 V, series resistor Rs = 1 kΩ and load resistor RL = 2 kΩ. Find the Zener current IZ.",
+          ta: "கொடுக்கப்பட்ட செனர் டையோடு மின்னழுத்த சீரமைப்பான் சுற்றில் V = 15 V, VZ = 9 V, தொடர் மின்தடை Rs = 1 kΩ மற்றும் பளு மின்தடை RL = 2 kΩ எனில், செனர் மின்னோட்டம் IZ-ஐக் காண்க."
+        },
+        options: ["1.5 mA", "6 mA", "4.5 mA", "3 mA"],
+        correct: 0,
+        hint: {
+          en: "Total current I = (V − VZ) / Rs; Load current IL = VZ / RL; Zener current IZ = I − IL.",
+          ta: "மொத்த மின்னோட்டம் I = (V − VZ) / Rs; பளு மின்னோட்டம் IL = VZ / RL; செனர் மின்னோட்டம் IZ = I − IL."
+        },
+        scert: {
+          given: "V = 15 V; VZ = 9 V; Rs = 1 kΩ; RL = 2 kΩ",
+          toFind: "Zener current (IZ)",
+          formula: "I = (V − VZ) / Rs ;   IL = VZ / RL ;   IZ = I − IL"
+        },
+        solution: {
+          en: "1. I = (15 − 9) / 1 kΩ = 6 mA\n2. IL = 9 / 2 kΩ = 4.5 mA\n3. IZ = I − IL = 6 − 4.5 = 1.5 mA.",
+          ta: "1. I = (15 − 9) / 1 kΩ = 6 mA\n2. IL = 9 / 2 kΩ = 4.5 mA\n3. IZ = 6 − 4.5 = 1.5 mA."
+        }
+      },
+      {
+        id: 73, unit: 10, ref: "Example 10.10", diagram: "q73",
+        q: {
+          en: "Find the Boolean expression for the output Y of the given logic circuit (A and B enter a NAND gate producing X, then X and C enter a NOR gate producing Y).",
+          ta: "கொடுக்கப்பட்டுள்ள தர்க்கச் சுற்றின் வெளியீடு Y-க்கான பூலியன் சமன்பாட்டைக் காண்க (A மற்றும் B ஆகியவை NAND கேட்டுக்குள் சென்று X-ஐத் தருகின்றன; பின்னர் X மற்றும் C ஆகியவை NOR கேட்டுக்குள் சென்று Y-ஐத் தருகின்றன)."
+        },
+        options: ["Y = A·B·C̄", "Y = (A·B) + C̄", "Y = Ā + B̄ + C", "Y = (A + B)·C̄"],
+        correct: 0,
+        hint: {
+          en: "X = (A·B)̄. Output of NOR gate Y = (X + C)̄ = ((A·B)̄ + C)̄ = A·B·C̄ (by De Morgan's theorem).",
+          ta: "X = (A·B)̄. NOR கேட்டின் வெளியீடு Y = ((A·B)̄ + C)̄ = A·B·C̄ (டி மார்கன் தேற்றப்படி)."
+        },
+        scert: {
+          given: "A, B → NAND → X; X, C → NOR → Y",
+          toFind: "Simplified Boolean expression for Y",
+          formula: "Y = ((A·B)̄ + C)̄ = A·B·C̄"
+        },
+        solution: {
+          en: "1. Output of NAND gate X = (A·B)̄\n2. Output of NOR gate Y = (X + C)̄ = ((A·B)̄ + C)̄\n3. Applying De Morgan's theorem: Y = (A·B) · C̄ = A·B·C̄.",
+          ta: "1. NAND வெளியீடு X = (A·B)̄\n2. NOR வெளியீடு Y = ((A·B)̄ + C)̄ = A·B·C̄."
+        }
+      },
+      {
+        id: 74, unit: 10, ref: "Exercise 10.7", diagram: "q74",
+        q: {
+          en: "Identify the logic gate equivalent to the given combination circuit where Y = A·B̄ + Ā·B.",
+          ta: "Y = A·B̄ + Ā·B என்ற பூலியன் வெளியீட்டைக் கொண்ட கொடுக்கப்பட்ட தர்க்கச் சுற்றிற்குச் சமமான தர்க்க கேட் எது?"
+        },
+        options: ["XOR gate", "XNOR gate", "NAND gate", "NOR gate"],
+        correct: 0,
+        hint: {
+          en: "Y = A·B̄ + Ā·B = A ⊕ B is the standard expression for an Exclusive-OR (XOR) gate.",
+          ta: "Y = A·B̄ + Ā·B = A ⊕ B என்பது XOR கேட்டின் சமன்பாடாகும்."
+        },
+        scert: {
+          given: "Y = A·B̄ + Ā·B",
+          toFind: "Equivalent logic gate",
+          formula: "Y = A ⊕ B (XOR Gate)"
+        },
+        solution: {
+          en: "The two AND gates produce A·B̄ and Ā·B respectively, and the OR gate combines them to give Y = A·B̄ + Ā·B = A ⊕ B, which is an XOR gate.",
+          ta: "இரண்டு AND கேட்டுகள் முறையே A·B̄ மற்றும் Ā·B தருகின்றன; OR கேட் இரண்டையும் இணைத்து Y = A·B̄ + Ā·B = A ⊕ B (XOR கேட்) தருகிறது."
+        }
+      }
+    ];
+
+    // =========================================================================
+    // 6. STRUCTURED SCERT & LOG TABLE HTML BUILDERS
+    // =========================================================================
+    function buildLogTableHTML(qObj) {
+      if (!qObj || !qObj.scert || !qObj.scert.logTable) return "";
+      const lt = qObj.scert.logTable;
+      const rowsHtml = lt.rows.map((r, idx) => {
+        const isFinal = idx === lt.rows.length - 1;
+        return `
+          <tr class="${isFinal ? "bg-rose-100/80 dark:bg-rose-950/60 font-extrabold text-rose-900 dark:text-rose-200" : "border-b border-rose-200/60 dark:border-rose-900/40"}">
+            <td class="px-3 py-1.5 border-r border-rose-200/70 dark:border-rose-800/60">${formatPhysicsHTML(r.no)}</td>
+            <td class="px-3 py-1.5 font-mono">${formatPhysicsHTML(r.log)}</td>
+          </tr>
+        `;
+      }).join("");
+
+      return `
+        <div class="overflow-hidden rounded-xl border border-rose-200 dark:border-rose-800/70 bg-white dark:bg-slate-900 text-xs">
+          <div class="px-3 py-1.5 bg-rose-100/70 dark:bg-rose-950/50 font-bold text-rose-800 dark:text-rose-300 text-[11px]">
+            ${lt.caption}
+          </div>
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 dark:bg-slate-800/80 border-b border-rose-200 dark:border-rose-800/70 text-[11px] uppercase text-slate-500 dark:text-slate-400">
+                <th class="px-3 py-1.5 border-r border-rose-200/70 dark:border-rose-800/60 w-1/2">No</th>
+                <th class="px-3 py-1.5 w-1/2">Log</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function buildStructuredSolutionHTML(qObj) {
+      if (!qObj || !qObj.scert) return "";
+      const sc = qObj.scert;
+      const isTa = appState.lang === "ta";
+      let html = `
+        <div class="grid grid-cols-1 gap-1.5 text-xs bg-white/80 dark:bg-slate-900/70 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+          <div><span class="font-extrabold text-indigo-600 dark:text-indigo-400">${isTa ? "கொடுக்கப்பட்டவை (Given):" : "Given:"}</span> ${formatPhysicsHTML(sc.given)}</div>
+          <div><span class="font-extrabold text-amber-600 dark:text-amber-400">${isTa ? "காண வேண்டியவை (To Find):" : "To Find:"}</span> ${formatPhysicsHTML(sc.toFind)}</div>
+          <div><span class="font-extrabold text-emerald-600 dark:text-emerald-400">${isTa ? "சூத்திரம் (Formula):" : "Formula:"}</span> <span class="font-semibold">${formatPhysicsHTML(sc.formula)}</span></div>
+        </div>
+      `;
+      if (sc.logTable) {
+        html += buildLogTableHTML(qObj);
+      }
+      return html;
+    }
+
+    // =========================================================================
+    // 7. VOICE READ-ALOUD (TEXT-TO-SPEECH), THEME, LANGUAGE & STUDENT VALIDATION
+    // =========================================================================
+    function speakText(rawText) {
+      if (appState.muted) return;
+      if (!("speechSynthesis" in window)) {
+        showToast(t().speechUnsupported);
+        return;
+      }
+      try {
+        window.speechSynthesis.cancel();
+        const clean = String(rawText)
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        const utter = new SpeechSynthesisUtterance(clean);
+        utter.lang = appState.lang === "ta" ? "ta-IN" : "en-IN";
+        utter.rate = 0.95;
+        window.speechSynthesis.speak(utter);
+      } catch (e) {}
+    }
+
+    function stopSpeech() {
+      try {
+        if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      } catch (e) {}
+    }
+
+    function speakCurrentQuestion() {
+      const qObj = gameSession.questions[gameSession.index];
+      if (!qObj) return;
+      const txt = appState.lang === "ta" ? qObj.q.ta : qObj.q.en;
+      speakText(txt);
+    }
+
+    function speakCurrentSolution() {
+      const qObj = gameSession.questions[gameSession.index];
+      if (!qObj) return;
+      const txt = appState.lang === "ta" ? qObj.solution.ta : qObj.solution.en;
+      speakText(txt);
+    }
+
+    function speakCurrentLogMethod() {
+      const qObj = gameSession.questions[gameSession.index];
+      if (!qObj || !qObj.scert || !qObj.scert.logTable) return;
+      const summary = qObj.scert.logTable.rows.map(r => `${r.no}: ${r.log}`).join(". ");
+      speakText(summary);
+    }
+
+    function toggleMuteSpeech() {
+      appState.muted = !appState.muted;
+      if (appState.muted) stopSpeech();
+      saveAppState();
+      document.getElementById("btn-mute-top").textContent = appState.muted ? "🔇" : "🔊";
+    }
+
+    function toggleTheme() {
+      appState.dark = !appState.dark;
+      saveAppState();
+      applyTheme();
+    }
+
+    function applyTheme() {
+      document.documentElement.classList.toggle("dark", appState.dark);
+      document.getElementById("theme-icon").textContent = appState.dark ? "☀️" : "🌙";
+    }
+
+    function toggleLanguage() {
+      stopSpeech();
+      appState.lang = appState.lang === "en" ? "ta" : "en";
+      document.documentElement.lang = appState.lang;
+      saveAppState();
+      applyLocalizedUI();
+      if (!document.getElementById("view-arena").classList.contains("hidden")) {
+        renderCurrentQuestion();
+      } else if (!document.getElementById("view-result").classList.contains("hidden")) {
+        renderScorecard();
+      }
+    }
+
+    function editTeacherName() {
+      const newName = window.prompt("Enter Teacher & School Name:", appState.teacherName);
+      if (newName && newName.trim()) {
+        appState.teacherName = newName.trim();
+        saveAppState();
+        applyLocalizedUI();
+      }
+    }
+
+    function syncStudentInputs() {
+      appState.student = {
+        name: document.getElementById("inp-student-name").value.trim(),
+        school: document.getElementById("inp-school-name").value.trim(),
+        cls: document.getElementById("inp-class").value.trim() || "12",
+        section: document.getElementById("inp-section").value.trim()
+      };
+      saveAppState();
+      const badge = document.getElementById("student-saved-badge");
+      if (appState.student.name && appState.student.school) {
+        badge.classList.remove("hidden");
+        document.getElementById("student-form-error").classList.add("hidden");
+      } else {
+        badge.classList.add("hidden");
+      }
+    }
+
+    function validateStudentBeforeStart() {
+      syncStudentInputs();
+      const errEl = document.getElementById("student-form-error");
+      if (!appState.student.name || !appState.student.school) {
+        errEl.textContent = t().errMissingStudent;
+        errEl.classList.remove("hidden");
+        errEl.classList.add("animate-shake");
+        setTimeout(() => errEl.classList.remove("animate-shake"), 350);
+        document.getElementById("inp-student-name").focus();
+        return false;
+      }
+      errEl.classList.add("hidden");
+      return true;
+    }
+
+    function renderUnitCards() {
+      const container = document.getElementById("unit-list");
+      container.innerHTML = "";
+      UNITS.forEach(u => {
+        const unitQs = QUESTIONS.filter(q => q.unit === u.id);
+        const solvedInUnit = unitQs.filter(q => appState.solvedIds.includes(q.id)).length;
+        const btn = document.createElement("button");
+        btn.onclick = () => startSessionWithValidation("unit", u.id);
+        btn.className = "text-left p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 shadow-sm transition flex items-center justify-between gap-2.5";
+        btn.innerHTML = `
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="w-9 h-9 shrink-0 rounded-xl bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center text-lg">${u.icon}</span>
+            <div class="min-w-0">
+              <div class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate">${appState.lang === "ta" ? u.ta : u.en}</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400">${unitQs.length} Sums • ${solvedInUnit}/${unitQs.length} Solved</div>
+            </div>
+          </div>
+          <span class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 shrink-0">→</span>
+        `;
+        container.appendChild(btn);
+      });
+    }
+
+    function applyLocalizedUI() {
+      const tr = t();
+      const isTa = appState.lang === "ta";
+      const hubSuffix = isTa ? "இயற்பியல் கேம் ஹப்" : "Physics Game Hub";
+
+      document.getElementById("header-teacher-title").textContent = `${appState.teacherName} — ${hubSuffix}`;
+      document.getElementById("header-subtitle").textContent = tr.subtitle;
+      document.getElementById("header-attended-count").textContent = (appState.attendanceLog || []).length;
+      document.getElementById("header-choco").textContent = appState.chocolates;
+      document.getElementById("btn-lang-top").textContent = tr.langTopBtn;
+      document.getElementById("btn-lang-hero").textContent = tr.langHeroBtn;
+      document.getElementById("btn-mute-top").textContent = appState.muted ? "🔇" : "🔊";
+
+      document.getElementById("lbl-install-app").textContent = tr.installApp;
+      document.getElementById("hero-badge").textContent = tr.heroBadge;
+      document.getElementById("hero-title").textContent = tr.heroTitle;
+      document.getElementById("hero-desc").textContent = tr.heroDesc;
+
+      const solved = appState.solvedIds.length;
+      const total = QUESTIONS.length;
+      const pct = Math.round((solved / total) * 100);
+      document.getElementById("progress-label").innerHTML = `${tr.progressPrefix} (<span id="solved-count">${solved}</span>/${total} ${tr.solvedSuffix})`;
+      document.getElementById("solved-percent").textContent = `${pct}%`;
+      document.getElementById("progress-bar").style.width = `${pct}%`;
+
+      document.getElementById("student-form-heading").innerHTML = `<span>🎓</span> ${tr.studentHeading}`;
+      document.getElementById("student-saved-badge").textContent = tr.savedBadge;
+      document.getElementById("lbl-student-name").textContent = tr.lblStudentName;
+      document.getElementById("inp-student-name").placeholder = tr.phStudentName;
+      document.getElementById("lbl-school-name").textContent = tr.lblSchoolName;
+      document.getElementById("inp-school-name").placeholder = tr.phSchoolName;
+      document.getElementById("lbl-class").textContent = tr.lblClass;
+      document.getElementById("lbl-section").textContent = tr.lblSection;
+      document.getElementById("inp-section").placeholder = tr.phSection;
+
+      document.getElementById("modes-heading").textContent = tr.modesHeading;
+      document.getElementById("mode-all-title").textContent = tr.modeAllTitle;
+      document.getElementById("mode-all-desc").textContent = tr.modeAllDesc;
+      document.getElementById("mode-q10-title").textContent = tr.modeQ10Title;
+      document.getElementById("mode-q10-desc").textContent = tr.modeQ10Desc;
+      document.getElementById("mode-q15-title").textContent = tr.modeQ15Title;
+      document.getElementById("mode-q15-desc").textContent = tr.modeQ15Desc;
+
+      document.getElementById("units-heading").textContent = tr.unitsHeading;
+      document.getElementById("units-tap-hint").textContent = tr.unitsTapHint;
+
+      document.getElementById("lbl-home-btn").textContent = tr.homeBtn;
+      document.getElementById("lbl-score-short").textContent = tr.scoreShort;
+      document.getElementById("lbl-result-btn").textContent = tr.resultBtn;
+      document.getElementById("lbl-read-aloud").textContent = tr.readAloud;
+      document.getElementById("lbl-hint-btn").textContent = tr.hintBtn;
+      document.getElementById("lbl-sol-btn").textContent = tr.solBtn;
+      document.getElementById("lbl-log-btn").textContent = tr.logBtn;
+      document.getElementById("lbl-log-box-title").textContent = tr.logBoxTitle;
+      document.getElementById("lbl-listen-log").textContent = tr.listenLog;
+      document.getElementById("lbl-hint-title").textContent = tr.hintTitle;
+      document.getElementById("lbl-sol-title").textContent = tr.solTitle;
+      document.getElementById("lbl-listen-sol").textContent = tr.listenSol;
+      document.getElementById("lbl-prev").textContent = tr.prevBtn;
+      document.getElementById("lbl-res-home").textContent = tr.resHome;
+      document.getElementById("lbl-download-pdf").textContent = tr.downloadPdf;
+
+      renderUnitCards();
+    }
+
+    // =========================================================================
+    // 8. CHOCOLATE SHOWER ANIMATION (ONLY ON CORRECT ANSWER)
+    // =========================================================================
+    function triggerChocolateShower(isCorrect) {
+      if (!isCorrect) return;
+      appState.chocolates += 1;
+      gameSession.chocoEarned += 1;
+      saveAppState();
+      document.getElementById("header-choco").textContent = appState.chocolates;
+
+      const layer = document.getElementById("choco-layer");
+      const pieces = 18;
+      const icons = ["🍫", "🍬", "🍫", "✨"];
+
+      for (let i = 0; i < pieces; i++) {
+        const el = document.createElement("div");
+        el.className = "choco-piece";
+        el.textContent = icons[i % icons.length];
+        el.style.left = `${Math.random() * 92 + 2}%`;
+        el.style.fontSize = `${Math.floor(Math.random() * 14) + 22}px`;
+        el.style.animationDuration = `${(Math.random() * 1.1 + 1.3).toFixed(2)}s`;
+        el.style.animationDelay = `${(Math.random() * 0.35).toFixed(2)}s`;
+        layer.appendChild(el);
+
+        setTimeout(() => {
+          el.remove();
+        }, 2800);
+      }
+    }
+
+    // =========================================================================
+    // 9. NAVIGATION & GAMEPLAY FLOW
+    // =========================================================================
+    function showView(viewId) {
+      ["view-home", "view-arena", "view-result"].forEach(id => {
+        document.getElementById(id).classList.add("hidden");
+      });
+      document.getElementById(viewId).classList.remove("hidden");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function goHome() {
+      stopSpeech();
+      applyLocalizedUI();
+      showView("view-home");
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.classList.remove("hidden");
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.add("hidden"), 2500);
+    }
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function startSessionWithValidation(mode, param) {
+      if (!validateStudentBeforeStart()) return;
+      stopSpeech();
+
+      let selectedQs = [];
+      if (mode === "practice") {
+        selectedQs = [...QUESTIONS];
+      } else if (mode === "unit") {
+        selectedQs = QUESTIONS.filter(q => q.unit === param);
+      } else if (mode === "challenge") {
+        selectedQs = shuffleArray(QUESTIONS).slice(0, param);
+      }
+
+      gameSession = {
+        mode,
+        questions: selectedQs,
+        index: 0,
+        score: 0,
+        chocoEarned: 0,
+        shuffledOptionsMap: {},
+        attempts: {}
+      };
+
+      const s = appState.student;
+      const clsSec = s.section ? `${s.cls || "12"}-${s.section}` : (s.cls || "12");
+      recordStudentAttendance(`${mode}${param ? " (" + param + ")" : ""}`);
+      document.getElementById("badge-student-info").textContent = `${s.name} (${clsSec})`;
+      document.getElementById("badge-school-info").textContent = `• ${s.school}`;
+      document.getElementById("arena-score-val").textContent = "0";
+
+      const pillsStrip = document.getElementById("question-pills-strip");
+      if (mode === "practice" || mode === "unit") {
+        pillsStrip.classList.remove("hidden");
+      } else {
+        pillsStrip.classList.add("hidden");
+      }
+
+      showView("view-arena");
+      renderCurrentQuestion();
+    }
+
+    function renderQuestionPills() {
+      const strip = document.getElementById("question-pills-strip");
+      strip.innerHTML = "";
+      gameSession.questions.forEach((q, idx) => {
+        const isCurrent = idx === gameSession.index;
+        const attempted = gameSession.attempts[q.id];
+        const btn = document.createElement("button");
+        btn.onclick = () => {
+          stopSpeech();
+          gameSession.index = idx;
+          renderCurrentQuestion();
+        };
+        let cls = "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800";
+        if (isCurrent) {
+          cls = "bg-indigo-600 text-white shadow-sm";
+        } else if (attempted) {
+          cls = attempted.isCorrect
+            ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300"
+            : "bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300";
+        }
+        btn.className = `shrink-0 w-8 h-8 rounded-xl text-xs font-extrabold transition ${cls}`;
+        btn.textContent = q.id;
+        strip.appendChild(btn);
+      });
+    }
+
+    function renderCurrentQuestion() {
+      const tr = t();
+      const qObj = gameSession.questions[gameSession.index];
+      const unitObj = UNITS.find(u => u.id === qObj.unit);
+
+      document.getElementById("arena-counter-badge").textContent = `${gameSession.index + 1} / ${gameSession.questions.length}`;
+      document.getElementById("arena-score-val").textContent = gameSession.score;
+      document.getElementById("q-unit-badge").textContent = `${unitObj.icon} ${appState.lang === "ta" ? unitObj.ta : unitObj.en}`;
+      document.getElementById("q-ref-badge").textContent = `Q${qObj.id} • ${qObj.ref}`;
+      document.getElementById("q-text").innerHTML = `${qObj.id}. ${formatPhysicsHTML(appState.lang === "ta" ? qObj.q.ta : qObj.q.en)}`;
+
+      // SVG Diagram
+      const diagBox = document.getElementById("q-diagram");
+      if (qObj.diagram && DIAGRAMS[qObj.diagram]) {
+        diagBox.innerHTML = DIAGRAMS[qObj.diagram];
+        diagBox.classList.remove("hidden");
+      } else {
+        diagBox.innerHTML = "";
+        diagBox.classList.add("hidden");
+      }
+
+      // Hint & Solution content
+      document.getElementById("hint-box").classList.add("hidden");
+      document.getElementById("hint-content").innerHTML = formatPhysicsHTML(appState.lang === "ta" ? qObj.hint.ta : qObj.hint.en);
+
+      // Show Log / ALog Table button ONLY for sums that actually need Log/ALog
+      const hasLogTable = Boolean(qObj.scert && qObj.scert.logTable);
+      const logBtn = document.getElementById("btn-toggle-log");
+      const logBox = document.getElementById("log-method-box");
+      logBox.classList.add("hidden");
+      if (hasLogTable) {
+        logBtn.classList.remove("hidden");
+        document.getElementById("log-method-content").innerHTML = buildLogTableHTML(qObj);
+      } else {
+        logBtn.classList.add("hidden");
+        document.getElementById("log-method-content").innerHTML = "";
+      }
+
+      document.getElementById("solution-box").classList.add("hidden");
+      document.getElementById("solution-structured").innerHTML = buildStructuredSolutionHTML(qObj);
+      document.getElementById("solution-content").innerHTML = formatPhysicsHTML(appState.lang === "ta" ? qObj.solution.ta : qObj.solution.en);
+
+      const fb = document.getElementById("feedback-banner");
+      fb.classList.add("hidden");
+
+      // Shuffle options for each question so answer is NOT always in option A
+      if (!gameSession.shuffledOptionsMap[qObj.id]) {
+        const paired = qObj.options.map((text, idx) => ({
+          text,
+          isCorrect: idx === qObj.correct
+        }));
+        gameSession.shuffledOptionsMap[qObj.id] = shuffleArray(paired);
+      }
+
+      // Options
+      const existingAttempt = gameSession.attempts[qObj.id];
+      const optionsGrid = document.getElementById("options-grid");
+      optionsGrid.innerHTML = "";
+      const labels = ["A", "B", "C", "D"];
+
+      gameSession.shuffledOptionsMap[qObj.id].forEach((optItem, idx) => {
+        const optText = optItem.text;
+        const isCorrectOpt = optItem.isCorrect;
+        const btn = document.createElement("button");
+        let btnStyle = "border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50 hover:border-indigo-500";
+
+        if (existingAttempt) {
+          btn.disabled = true;
+          if (isCorrectOpt) {
+            btnStyle = "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200";
+          } else if (existingAttempt.chosenText === optText && !existingAttempt.isCorrect) {
+            btnStyle = "border-rose-500 bg-rose-50 dark:bg-rose-950/60 text-rose-900 dark:text-rose-200";
+          }
+        }
+
+        btn.className = `w-full text-left p-3.5 rounded-2xl border-2 transition flex items-center gap-3 font-semibold text-sm ${btnStyle}`;
+        btn.innerHTML = `
+          <span class="w-7 h-7 shrink-0 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center text-xs font-extrabold">${labels[idx]}</span>
+          <span>${formatPhysicsHTML(optText)}</span>
+        `;
+        btn.onclick = () => submitAnswer(qObj, optText, isCorrectOpt);
+        optionsGrid.appendChild(btn);
+      });
+
+      if (existingAttempt) {
+        showAnswerFeedback(existingAttempt.isCorrect);
+        document.getElementById("solution-box").classList.remove("hidden");
+      }
+
+      // Prev / Next buttons
+      const prevBtn = document.getElementById("btn-prev");
+      prevBtn.disabled = gameSession.index === 0;
+      prevBtn.classList.toggle("opacity-40", gameSession.index === 0);
+
+      const nextBtn = document.getElementById("btn-next");
+      const isLast = gameSession.index === gameSession.questions.length - 1;
+      nextBtn.innerHTML = isLast
+        ? `🏁 ${tr.finishBtn}`
+        : `${tr.nextBtn} →`;
+
+      if (gameSession.mode === "practice" || gameSession.mode === "unit") {
+        renderQuestionPills();
+      }
+    }
+
+    function submitAnswer(qObj, chosenText, isCorrect) {
+      if (gameSession.attempts[qObj.id]) return;
+
+      const correctText = qObj.options[qObj.correct];
+      gameSession.attempts[qObj.id] = {
+        chosenText,
+        correctText,
+        isCorrect
+      };
+
+      if (isCorrect) {
+        gameSession.score += 1;
+        if (!appState.solvedIds.includes(qObj.id)) {
+          appState.solvedIds.push(qObj.id);
+        }
+      }
+
+      document.getElementById("arena-score-val").textContent = gameSession.score;
+      triggerChocolateShower(isCorrect);
+      renderCurrentQuestion();
+      showAnswerFeedback(isCorrect);
+      document.getElementById("solution-box").classList.remove("hidden");
+    }
+
+    function showAnswerFeedback(isCorrect) {
+      const tr = t();
+      const fb = document.getElementById("feedback-banner");
+      const fbIcon = fb.querySelector("span:last-child");
+      fb.classList.remove("hidden", "bg-emerald-100", "text-emerald-900", "dark:bg-emerald-950/80", "dark:text-emerald-200", "bg-rose-100", "text-rose-900", "dark:bg-rose-950/80", "dark:text-rose-200");
+
+      const pool = isCorrect ? tr.correctMsg : tr.attemptEncourageMsg;
+      const msg = pool[Math.floor(Math.random() * pool.length)];
+
+      if (isCorrect) {
+        fb.classList.add("bg-emerald-100", "text-emerald-900", "dark:bg-emerald-950/80", "dark:text-emerald-200");
+        if (fbIcon) fbIcon.textContent = "🍫🎉";
+      } else {
+        fb.classList.add("bg-rose-100", "text-rose-900", "dark:bg-rose-950/80", "dark:text-rose-200");
+        if (fbIcon) fbIcon.textContent = "📘💡";
+      }
+      document.getElementById("feedback-text").textContent = msg;
+    }
+
+    function toggleHint() {
+      document.getElementById("hint-box").classList.toggle("hidden");
+    }
+
+    function toggleSolution() {
+      document.getElementById("solution-box").classList.toggle("hidden");
+    }
+
+    function toggleLogMethod() {
+      document.getElementById("log-method-box").classList.toggle("hidden");
+    }
+
+    function prevQuestion() {
+      if (gameSession.index > 0) {
+        stopSpeech();
+        gameSession.index--;
+        renderCurrentQuestion();
+      }
+    }
+
+    function nextQuestion() {
+      stopSpeech();
+      if (gameSession.index < gameSession.questions.length - 1) {
+        gameSession.index++;
+        renderCurrentQuestion();
+      } else {
+        openSummaryModalOrScreen();
+      }
+    }
+
+    // =========================================================================
+    // 10. FINAL SCORECARD & PDF DOWNLOAD
+    // =========================================================================
+    function openSummaryModalOrScreen() {
+      stopSpeech();
+      renderScorecard();
+      showView("view-result");
+    }
+
+    function renderScorecard() {
+      const tr = t();
+      const s = appState.student;
+      const totalQ = gameSession.questions.length || 1;
+      const attemptedCount = Object.keys(gameSession.attempts).length;
+      const acc = attemptedCount > 0 ? Math.round((gameSession.score / attemptedCount) * 100) : 0;
+
+      const suffix = appState.lang === "ta" ? "இயற்பியல் கேம் ஹப்" : "Physics Game Hub";
+      document.getElementById("rep-teacher-line").textContent = `${appState.teacherName} — ${suffix}`;
+      document.getElementById("rep-title").textContent = tr.repTitle;
+      document.getElementById("rep-date").textContent = new Date().toLocaleDateString();
+      document.getElementById("rep-medium-label").textContent = tr.repMedium;
+
+      document.getElementById("rep-lbl-name").textContent = tr.repLblName;
+      document.getElementById("rep-val-name").textContent = s.name || "-";
+
+      document.getElementById("rep-lbl-class").textContent = tr.repLblClass;
+      document.getElementById("rep-val-class").textContent = s.section ? `${s.cls || "12"} - ${s.section}` : (s.cls || "12");
+
+      document.getElementById("rep-lbl-school").textContent = tr.repLblSchool;
+      document.getElementById("rep-val-school").textContent = s.school || "-";
+
+      document.getElementById("rep-score-val").textContent = `${gameSession.score} / ${totalQ}`;
+      document.getElementById("rep-score-lbl").textContent = tr.repScoreLbl;
+      document.getElementById("rep-acc-val").textContent = `${acc}%`;
+      document.getElementById("rep-acc-lbl").textContent = tr.repAccLbl;
+      document.getElementById("rep-choco-val").textContent = `${gameSession.chocoEarned} 🍫`;
+      document.getElementById("rep-choco-lbl").textContent = tr.repChocoLbl;
+      document.getElementById("rep-breakdown-heading").textContent = tr.repBreakdown;
+
+      const listEl = document.getElementById("rep-answers-list");
+      listEl.innerHTML = "";
+
+      if (attemptedCount === 0) {
+        listEl.innerHTML = `<div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-xs text-slate-500 text-center">${tr.noAttemptsYet}</div>`;
+        return;
+      }
+
+      gameSession.questions.forEach(qObj => {
+        const att = gameSession.attempts[qObj.id];
+        if (!att) return;
+        const qText = appState.lang === "ta" ? qObj.q.ta : qObj.q.en;
+
+        const row = document.createElement("div");
+        row.className = `print-break-inside p-3 rounded-2xl border text-xs space-y-1 ${
+          att.isCorrect
+            ? "bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/60"
+            : "bg-rose-50/60 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/60"
+        }`;
+        row.innerHTML = `
+          <div class="font-bold text-slate-800 dark:text-slate-100">
+            ${att.isCorrect ? "✅" : "❌"} Q${qObj.id}: ${formatPhysicsHTML(qText)}
+          </div>
+          <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] pt-0.5">
+            <span><strong>${tr.yourAns}:</strong> ${formatPhysicsHTML(att.chosenText)}</span>
+            <span class="text-emerald-700 dark:text-emerald-300"><strong>${tr.correctAns}:</strong> ${formatPhysicsHTML(att.correctText)}</span>
+          </div>
+        `;
+        listEl.appendChild(row);
+      });
+    }
+
+    function downloadResultPDF() {
+      renderScorecard();
+      showToast(appState.lang === "ta" ? "📄 PDF சேமிக்க 'Save as PDF' தேர்வு செய்யவும்..." : "📄 Select 'Save as PDF' in print dialog...");
+      setTimeout(() => {
+        try {
+          window.print();
+        } catch (err) {
+          showToast("Use browser menu → Print / Save as PDF");
+        }
+      }, 250);
+    }
+
+    // =========================================================================
+    // 11. INITIALIZATION
+    // =========================================================================
+    document.getElementById("inp-student-name").value = appState.student.name || "";
+    document.getElementById("inp-school-name").value = appState.student.school || "";
+    document.getElementById("inp-class").value = appState.student.cls || "12";
+    document.getElementById("inp-section").value = appState.student.section || "";
+
+    ["inp-student-name", "inp-school-name", "inp-class", "inp-section"].forEach(id => {
+      document.getElementById(id).addEventListener("input", syncStudentInputs);
+    });
+
+    document.documentElement.lang = appState.lang;
+    applyTheme();
+    applyLocalizedUI();
+    syncStudentInputs();
+  </script>
+</body>
+</html>
